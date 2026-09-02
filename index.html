@@ -294,22 +294,69 @@ th{background:#fafaff}
   .compare-cards{grid-template-columns:1fr;}
 }
 
+
+.auth-panel{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px;
+  background:#fbfdfc;
+}
+.auth-state{
+  font-size:11px;
+  color:#7a867f;
+  margin-bottom:8px;
+  line-height:1.4;
+}
+.auth-btn{
+  width:100%;
+  border:1px solid #cfe0d6;
+  background:#fff;
+  color:#2f7d5a;
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:800;
+}
+.auth-btn:hover{background:#f2f8f4}
+.auth-only.is-hidden{display:none !important}
+.sync-status{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:999;
+  background:#244d3c;
+  color:white;
+  border-radius:999px;
+  padding:9px 13px;
+  font-size:12px;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);
+  display:none;
+}
+.sync-status.show{display:block}
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="app">
 <aside class="sidebar">
   <div class="brand">⚗ Etch Data Lab</div>
   <div class="nav active" data-view="dashboard">⌂ 대시보드</div>
-  <div class="nav" data-view="upload">◉ 실험 데이터</div>
+  <div class="nav auth-only" data-view="upload">◉ 실험 데이터</div>
   <div class="nav" data-view="compare">⌁ 비교 분석</div>
   <div class="nav" data-view="list">▣ 데이터 목록</div>
   <div class="nav" data-view="conditions">◉ 실험 조건 관리</div>
   <div class="sep"></div>
   <div class="small">설정</div>
   <div class="nav" data-view="guide">ⓘ 측정 항목 설명</div>
-  <div class="nav" onclick="alert('테스트용 단일 HTML입니다. 저장 데이터는 이 브라우저의 localStorage에 보관됩니다.')">? 도움말</div>
-  <div class="version">내부 실험 뷰어<br>Ver. 1.0.0</div>
+  <div class="nav" onclick="alert('공개 조회는 누구나 가능하며, 데이터 추가/삭제는 관리자 로그인 후 가능합니다.')">? 도움말</div>
+  <div class="auth-panel">
+      <div class="auth-state" id="authStatus">공개 보기 모드</div>
+      <button class="auth-btn" id="authButton" onclick="handleAuthButton()">관리자 로그인</button>
+    </div>
+    <div class="version">Low-k Data Viewer<br>Supabase Sync</div>
 </aside>
 
 <main class="main">
@@ -320,7 +367,7 @@ th{background:#fafaff}
   </div>
 
   <div class="grid g3">
-    <div class="card quick"><div class="icon">▣</div><h3>실험 데이터 입력</h3><div class="subtitle">SEM 이미지와 측정값을 저장합니다.</div><div class="link" onclick="showView('upload')">바로가기 →</div></div>
+    <div class="card quick auth-only"><div class="icon">▣</div><h3>실험 데이터 입력</h3><div class="subtitle">SEM 이미지와 측정값을 저장합니다.</div><div class="link" onclick="showView('upload')">바로가기 →</div></div>
     <div class="card quick"><div class="icon">↗</div><h3>비교 분석 보기</h3><div class="subtitle">Source / Gas / Pressure 등을 고정 또는 변경해 비교합니다.</div><div class="link" onclick="showView('compare')">바로가기 →</div></div>
     <div class="card quick"><div class="icon">▤</div><h3>측정 가이드</h3><div class="subtitle">Mask, Depth, CD, Angle 기준을 확인합니다.</div><div class="link" onclick="showView('guide')">바로가기 →</div></div>
   </div>
@@ -451,22 +498,130 @@ th{background:#fafaff}
 <script>
 const labels=["Side","Mask","Depth","Top CD","Middle CD","Bottom CD","Left Angle","Right Angle"];
 const imgKeys=["side","maskImg","depthImg","topImg","midImg","bottomImg","leftImg","rightImg"];
-const STORAGE="etchDataLab_v1";
+const SUPABASE_URL="https://tahbwnjrzjfegzigxsos.supabase.co";
+const SUPABASE_KEY="sb_publishable_8jyOe5F5lq0Z5yjW0SN1eA_doi51cvx";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const seed=[
-{id:"EXP-001",date:"2026-09-01 14:20",source:"300",bias:"1200V (+600V / -600V)",ar:"200",c4f8:"50",o2:"10",pressure:"30",time:"60",temp:"20",mask:"74",depth:"88",topcd:"99",middlecd:"78",bottomcd:"53",leftangle:"82.6",rightangle:"82.6",calcangle:"82.6",avgangle:"82.6",memo:"Source 300W 기준",images:{}},
-{id:"EXP-002",date:"2026-09-01 14:35",source:"100",bias:"1200V (+600V / -600V)",ar:"200",c4f8:"50",o2:"10",pressure:"30",time:"60",temp:"20",mask:"70",depth:"84",topcd:"94",middlecd:"74",bottomcd:"50",leftangle:"82.5",rightangle:"82.5",calcangle:"82.5",avgangle:"82.5",memo:"Source 100W",images:{}},
-{id:"EXP-003",date:"2026-09-01 14:50",source:"50",bias:"1200V (+600V / -600V)",ar:"200",c4f8:"50",o2:"10",pressure:"25",time:"60",temp:"20",mask:"66",depth:"76",topcd:"85",middlecd:"66",bottomcd:"44",leftangle:"82.3",rightangle:"82.3",calcangle:"82.3",avgangle:"82.3",memo:"Source 50W, Pressure 25",images:{}}
-];
-
-let data = JSON.parse(localStorage.getItem(STORAGE)||"null") || seed;
-data = data.map(x => ({
-  ...x,
-  calcangle: (x.calcangle ?? x.avgangle ?? "")
-}));
+let data=[];
+let currentUser=null;
 const imageBuffer={};
+const imageFiles={};
 
-function saveLocal(){ localStorage.setItem(STORAGE,JSON.stringify(data)); }
+function setSync(message="", show=false){
+  const el=document.getElementById("syncStatus");
+  if(!el) return;
+  el.textContent=message || "동기화 중...";
+  el.classList.toggle("show", !!show);
+}
+
+function formatDbDate(value){
+  if(!value) return "";
+  const d=new Date(value);
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function dbToUI(x){
+  return {
+    dbid:x.id,
+    id:x.exp_id || ("EXP-"+String(x.id).padStart(3,"0")),
+    date:formatDbDate(x.created_at),
+    source:x.source_power ?? "",
+    bias:x.bias ?? "",
+    ar:x.ar ?? "",
+    c4f8:x.c4f8 ?? "",
+    o2:x.o2 ?? "",
+    pressure:x.pressure ?? "",
+    time:x.time_sec ?? "",
+    temp:x.temp_c ?? "",
+    mask:x.mask_nm ?? "",
+    depth:x.depth_nm ?? "",
+    topcd:x.top_cd_nm ?? "",
+    middlecd:x.middle_cd_nm ?? "",
+    bottomcd:x.bottom_cd_nm ?? "",
+    leftangle:x.left_angle ?? "",
+    rightangle:x.right_angle ?? "",
+    calcangle:x.calc_angle ?? "",
+    memo:x.memo ?? "",
+    images:x.images || {}
+  };
+}
+
+function numberOrNull(v){
+  if(v===null || v===undefined || String(v).trim()==="") return null;
+  const n=Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function loadExperiments(){
+  setSync("데이터 불러오는 중...", true);
+  const {data:rows,error}=await db
+    .from("experiments")
+    .select("*")
+    .order("created_at",{ascending:false});
+  if(error){
+    console.error(error);
+    setSync("데이터 연결 오류", true);
+    setTimeout(()=>setSync("",false),2500);
+    alert("Supabase 데이터를 불러오지 못했습니다.\n"+error.message);
+    return;
+  }
+  data=(rows||[]).map(dbToUI);
+  renderDashboard();
+  renderTables();
+  populateFilters();
+  renderAll();
+  renderConditions();
+  renderCompare();
+  setSync("동기화 완료", true);
+  setTimeout(()=>setSync("",false),900);
+}
+
+function updateAuthUI(){
+  const logged=!!currentUser;
+  const status=document.getElementById("authStatus");
+  const btn=document.getElementById("authButton");
+  if(status) status.textContent=logged ? `관리자 로그인 · ${currentUser.email||""}` : "공개 보기 모드";
+  if(btn) btn.textContent=logged ? "로그아웃" : "관리자 로그인";
+  document.querySelectorAll(".auth-only").forEach(el=>el.classList.toggle("is-hidden",!logged));
+
+  if(!logged && document.getElementById("upload")?.classList.contains("active")){
+    showView("dashboard");
+  }
+  renderTables();
+  renderAll();
+}
+
+async function handleAuthButton(){
+  if(currentUser){
+    await db.auth.signOut();
+    return;
+  }
+  const email=prompt("관리자 이메일을 입력하세요.");
+  if(!email) return;
+  const password=prompt("비밀번호를 입력하세요.");
+  if(!password) return;
+
+  const {data:authData,error}=await db.auth.signInWithPassword({email,password});
+  if(error){
+    alert("로그인 실패: "+error.message);
+    return;
+  }
+  currentUser=authData.user;
+  updateAuthUI();
+  alert("관리자 로그인되었습니다.");
+}
+
+async function initAuth(){
+  const {data:sessionData}=await db.auth.getSession();
+  currentUser=sessionData.session?.user || null;
+  updateAuthUI();
+
+  db.auth.onAuthStateChange((_event,session)=>{
+    currentUser=session?.user || null;
+    updateAuthUI();
+  });
+}
 
 function showView(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -494,8 +649,12 @@ function makeUploadGrid(){
 }
 function previewImage(e,i){
   const f=e.target.files[0]; if(!f)return;
+  imageFiles[imgKeys[i]]=f;
   const r=new FileReader();
-  r.onload=ev=>{ imageBuffer[imgKeys[i]]=ev.target.result; document.getElementById("thumb_"+i).innerHTML=`<img src="${ev.target.result}">`; };
+  r.onload=ev=>{
+    imageBuffer[imgKeys[i]]=ev.target.result;
+    document.getElementById("thumb_"+i).innerHTML=`<img src="${ev.target.result}">`;
+  };
   r.readAsDataURL(f);
 }
 let calcAngleManual = false;
@@ -525,21 +684,88 @@ function nowStr(){
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 function val(id){return document.getElementById(id).value}
-function saveExperiment(){
-  const exp={
-    id:"EXP-"+String(data.length+1).padStart(3,"0"),date:nowStr(),
-    source:val("source"),bias:val("bias"),ar:val("ar"),c4f8:val("c4f8"),o2:val("o2"),
-    pressure:val("pressure"),time:val("time"),temp:val("temp"),
-    mask:val("mask"),depth:val("depth"),topcd:val("topcd"),middlecd:val("middlecd"),bottomcd:val("bottomcd"),
-    leftangle:val("leftangle"),rightangle:val("rightangle"),calcangle:val("calcangle"),memo:val("memo"),
-    images:{...imageBuffer}
-  };
-  data.unshift(exp); saveLocal(); renderTables(); renderDashboard(); populateFilters();
-  alert("저장되었습니다. 이 브라우저에 누적 저장됩니다.");
+async function saveExperiment(){
+  if(!currentUser){
+    alert("데이터 저장은 관리자 로그인 후 가능합니다.");
+    return;
+  }
+
+  const saveBtn=[...document.querySelectorAll("button")].find(b=>b.textContent.trim()==="저장하기");
+  if(saveBtn){saveBtn.disabled=true;saveBtn.textContent="저장 중...";}
+  setSync("실험 데이터 저장 중...",true);
+
+  try{
+    const images={};
+    const folder=`${Date.now()}_${crypto.randomUUID().slice(0,8)}`;
+
+    for(const [key,file] of Object.entries(imageFiles)){
+      const rawExt=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"") || "jpg";
+      const path=`${currentUser.id}/${folder}/${key}.${rawExt}`;
+      const {error:uploadError}=await db.storage
+        .from("sem-images")
+        .upload(path,file,{
+          cacheControl:"3600",
+          upsert:false,
+          contentType:file.type || undefined
+        });
+      if(uploadError) throw uploadError;
+
+      const {data:urlData}=db.storage.from("sem-images").getPublicUrl(path);
+      images[key]=urlData.publicUrl;
+    }
+
+    const row={
+      source_power:numberOrNull(val("source")),
+      bias:val("bias") || null,
+      ar:numberOrNull(val("ar")),
+      c4f8:numberOrNull(val("c4f8")),
+      o2:numberOrNull(val("o2")),
+      pressure:numberOrNull(val("pressure")),
+      time_sec:numberOrNull(val("time")),
+      temp_c:numberOrNull(val("temp")),
+      mask_nm:numberOrNull(val("mask")),
+      depth_nm:numberOrNull(val("depth")),
+      top_cd_nm:numberOrNull(val("topcd")),
+      middle_cd_nm:numberOrNull(val("middlecd")),
+      bottom_cd_nm:numberOrNull(val("bottomcd")),
+      left_angle:numberOrNull(val("leftangle")),
+      right_angle:numberOrNull(val("rightangle")),
+      calc_angle:numberOrNull(val("calcangle")),
+      memo:val("memo") || null,
+      images
+    };
+
+    const {data:inserted,error:insertError}=await db
+      .from("experiments")
+      .insert(row)
+      .select("id")
+      .single();
+
+    if(insertError) throw insertError;
+
+    const expId="EXP-"+String(inserted.id).padStart(3,"0");
+    const {error:updateError}=await db
+      .from("experiments")
+      .update({exp_id:expId})
+      .eq("id",inserted.id);
+
+    if(updateError) console.warn("EXP ID update:",updateError);
+
+    resetForm();
+    await loadExperiments();
+    alert(`${expId} 저장 완료`);
+  }catch(err){
+    console.error(err);
+    alert("저장 실패: "+(err?.message || err));
+  }finally{
+    if(saveBtn){saveBtn.disabled=false;saveBtn.textContent="저장하기";}
+    setSync("",false);
+  }
 }
 function resetForm(){
   ["mask","depth","topcd","middlecd","bottomcd","leftangle","rightangle","calcangle","memo"].forEach(id=>document.getElementById(id).value="");
   Object.keys(imageBuffer).forEach(k=>delete imageBuffer[k]);
+  Object.keys(imageFiles).forEach(k=>delete imageFiles[k]);
   calcAngleManual=false;
   makeUploadGrid();
 }
@@ -547,17 +773,47 @@ function tag(v){ return v==="300"?"tag300":v==="100"?"tag100":v==="50"?"tag50":"
 
 function tableHTML(rows,compact=false){
   if(!rows.length)return `<div class="empty">저장된 데이터가 없습니다.</div>`;
-  const head=`<tr><th>ID</th><th>일시</th><th>Source</th><th>Ar</th><th>C₄F₈</th><th>O₂</th><th>Pressure</th><th>Depth</th><th>Top CD</th><th>Middle CD</th><th>Bottom CD</th><th>계산 Angle</th>${compact?"":"<th>메모</th><th>삭제</th>"}</tr>`;
+  const canEdit=!!currentUser;
+  const deleteHead=(!compact && canEdit) ? "<th>삭제</th>" : "";
+  const memoHead=compact ? "" : "<th>메모</th>";
+  const head=`<tr><th>ID</th><th>일시</th><th>Source</th><th>Ar</th><th>C₄F₈</th><th>O₂</th><th>Pressure</th><th>Depth</th><th>Top CD</th><th>Middle CD</th><th>Bottom CD</th><th>계산 Angle</th>${memoHead}${deleteHead}</tr>`;
   const body=rows.map(x=>`<tr>
-  <td>${x.id}</td><td>${x.date}</td><td class="${tag(x.source)}">${x.source}W</td><td>${x.ar}</td><td>${x.c4f8}</td><td>${x.o2}</td><td>${x.pressure}</td>
-  <td>${x.depth||"-"}</td><td>${x.topcd||"-"}</td><td>${x.middlecd||"-"}</td><td>${x.bottomcd||"-"}</td><td>${x.calcangle||x.avgangle||"-"}</td>
-  ${compact?"":`<td>${x.memo||"-"}</td><td><button class="btn" style="padding:6px 9px" onclick="removeExp('${x.id}')">삭제</button></td>`}
+  <td>${x.id}</td><td>${x.date}</td><td class="${tag(String(x.source))}">${x.source!==""?x.source+"W":"-"}</td><td>${x.ar??"-"}</td><td>${x.c4f8??"-"}</td><td>${x.o2??"-"}</td><td>${x.pressure??"-"}</td>
+  <td>${x.depth??"-"}</td><td>${x.topcd??"-"}</td><td>${x.middlecd??"-"}</td><td>${x.bottomcd??"-"}</td><td>${x.calcangle??"-"}</td>
+  ${compact?"":`<td>${x.memo||"-"}</td>${canEdit?`<td><button class="btn" style="padding:6px 9px" onclick="removeExp('${x.id}')">삭제</button></td>`:""}`}
   </tr>`).join("");
   return `<div class="scroll"><table>${head}${body}</table></div>`;
 }
-function removeExp(id){
+async function removeExp(id){
+  if(!currentUser){
+    alert("삭제는 관리자 로그인 후 가능합니다.");
+    return;
+  }
+  const target=data.find(x=>x.id===id);
+  if(!target) return;
   if(!confirm(id+" 데이터를 삭제할까요?"))return;
-  data=data.filter(x=>x.id!==id); saveLocal(); renderTables(); renderDashboard(); populateFilters(); renderAll();
+
+  setSync("삭제 중...",true);
+  try{
+    const paths=Object.values(target.images||{})
+      .filter(v=>typeof v==="string" && v.includes("/storage/v1/object/public/sem-images/"))
+      .map(v=>decodeURIComponent(v.split("/storage/v1/object/public/sem-images/")[1]));
+
+    if(paths.length){
+      const {error:storageError}=await db.storage.from("sem-images").remove(paths);
+      if(storageError) console.warn("이미지 삭제:",storageError);
+    }
+
+    const {error}=await db.from("experiments").delete().eq("id",target.dbid);
+    if(error) throw error;
+
+    await loadExperiments();
+  }catch(err){
+    console.error(err);
+    alert("삭제 실패: "+(err?.message || err));
+  }finally{
+    setSync("",false);
+  }
 }
 function renderTables(){ document.getElementById("uploadTable").innerHTML=tableHTML(data,false); }
 function renderDashboard(){
@@ -762,40 +1018,66 @@ function exportCSV(){
 }
 function dl(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)}
 
-function importJSON(e){
+async function importJSON(e){
   const f=e.target.files[0];
   if(!f)return;
+  if(!currentUser){
+    alert("JSON 불러오기는 관리자 로그인 후 가능합니다.");
+    e.target.value="";
+    return;
+  }
+
   const r=new FileReader();
-  r.onload=ev=>{
+  r.onload=async ev=>{
     try{
       const x=JSON.parse(ev.target.result);
       if(!Array.isArray(x)) throw new Error("invalid");
-      data=x;
-      saveLocal();
-      renderDashboard();
-      renderTables();
-      populateFilters();
-      renderAll();
-      renderConditions();
-      renderCompare();
-      alert("JSON 데이터를 불러왔습니다.");
+
+      const rows=x.map(v=>({
+        exp_id:v.id || null,
+        source_power:numberOrNull(v.source),
+        bias:v.bias || null,
+        ar:numberOrNull(v.ar),
+        c4f8:numberOrNull(v.c4f8),
+        o2:numberOrNull(v.o2),
+        pressure:numberOrNull(v.pressure),
+        time_sec:numberOrNull(v.time),
+        temp_c:numberOrNull(v.temp),
+        mask_nm:numberOrNull(v.mask),
+        depth_nm:numberOrNull(v.depth),
+        top_cd_nm:numberOrNull(v.topcd),
+        middle_cd_nm:numberOrNull(v.middlecd),
+        bottom_cd_nm:numberOrNull(v.bottomcd),
+        left_angle:numberOrNull(v.leftangle),
+        right_angle:numberOrNull(v.rightangle),
+        calc_angle:numberOrNull(v.calcangle ?? v.avgangle),
+        memo:v.memo || null,
+        images:Object.fromEntries(
+          Object.entries(v.images||{}).filter(([k,url])=>typeof url==="string" && url.startsWith("http"))
+        )
+      }));
+
+      const {error}=await db.from("experiments").insert(rows);
+      if(error) throw error;
+      await loadExperiments();
+      alert(`${rows.length}건을 Supabase에 불러왔습니다.`);
     }catch(err){
-      alert("올바른 Etch Data Lab JSON 파일이 아닙니다.");
+      console.error(err);
+      alert("JSON 불러오기 실패: "+(err?.message || "올바른 파일이 아닙니다."));
     }
   };
   r.readAsText(f);
   e.target.value="";
 }
-
 /* 첫 화면 초기화 */
 makeUploadGrid();
 makeGuide();
-renderDashboard();
-renderTables();
-populateFilters();
-renderAll();
-renderConditions();
-renderCompare();
+
+(async()=>{
+  await initAuth();
+  await loadExperiments();
+})();
 </script>
+<div id="syncStatus" class="sync-status">동기화 중...</div>
 </body>
 </html>

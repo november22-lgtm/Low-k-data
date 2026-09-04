@@ -1,0 +1,2230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Low-k</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --green:#2f7d5a;
+  --green-dark:#234d3b;
+  --green-soft:#eef7f2;
+  --green-line:#d6e7de;
+  --blue:#4e7791;
+  --blue-soft:#eef5f8;
+  --red:#c94b4b;
+  --red-soft:#fff5f5;
+  --text:#202832;
+  --muted:#758079;
+  --bg:#f7f9f8;
+  --card:#fff;
+  --line:#e2e8e4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Inter,"Pretendard","Noto Sans KR",Arial,sans-serif;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:228px;background:#fff;border-right:1px solid var(--line);
+  padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;
+}
+.brand{font-size:20px;font-weight:900;color:var(--green);padding:8px 10px 20px}
+.demo-badge{display:inline-block;background:#fff8e9;color:#8a641e;border:1px solid #ead7aa;border-radius:999px;padding:3px 7px;font-size:10px;margin-left:5px}
+.nav{padding:11px 13px;border-radius:9px;margin:3px 0;color:#4f5a55;font-weight:750}
+.nav:hover,.nav.active{background:var(--green-soft);color:var(--green)}
+.sep{height:1px;background:var(--line);margin:15px 4px}
+.small{font-size:11px;color:#9aa39e;padding:0 10px 5px}
+.version{margin-top:auto;border:1px solid var(--line);border-radius:10px;padding:11px;color:#68746e;font-size:11px;background:#fff}
+.main{flex:1;padding:26px;min-width:0}
+.view{display:none}.view.active{display:block}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+h1{font-size:27px;margin:0} h2,h3{margin-top:0}
+.subtitle{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5}
+.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px;box-shadow:0 1px 3px rgba(30,60,45,.025)}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 13px;font-weight:800;color:#46534d}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.danger{color:var(--red);border-color:#efcaca;background:#fff}
+.note{background:#fbfdfc;border:1px solid var(--line);border-radius:9px;padding:11px 13px;color:#626f68;font-size:12px;line-height:1.55}
+.kpi{border:1px solid var(--line);border-radius:11px;padding:14px;background:#fff}
+.kpi .label{font-size:11px;color:#7c8881}.kpi .num{font-size:25px;font-weight:900;margin-top:5px}.kpi .desc{font-size:11px;color:#7f8a84;margin-top:5px}
+.segment{display:inline-flex;background:#edf2ef;border:1px solid #dce5e0;padding:4px;border-radius:10px;gap:3px}
+.seg-btn{border:0;background:transparent;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:850;color:#78837d}
+.seg-btn.active.room{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.seg-btn.active.cryo{background:#fff;color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.mode-label{font-size:11px;color:#8a9590;margin-bottom:5px}
+.form-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+.field label{display:block;font-size:11px;font-weight:800;margin-bottom:5px;color:#38463f}
+.field input,.field select,.field textarea{width:100%;padding:9px 10px;border:1px solid #dce3df;border-radius:8px;background:#fff}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#8eb7a0;box-shadow:0 0 0 3px rgba(47,125,90,.08)}
+.measure-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.upload-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:9px}
+.upload-card{text-align:center}
+.thumb{height:82px;background:#34383d;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#e4e8e5;font-size:10px;overflow:hidden}
+.thumb img{max-width:100%;max-height:100%;object-fit:contain}
+.upload-card input{width:100%;font-size:10px;margin-top:6px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:end}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:9px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{background:#f8faf9;color:#55625b}
+.scroll{overflow:auto}
+.compare-controls{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px;align-items:end}
+.compare-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:13px}
+.compare-card{border:1px solid var(--green-line);border-radius:12px;background:#fff;padding:10px;min-width:0}
+.exp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.exp-id{font-size:12px;font-weight:900;color:#526058}
+.mode-chip{font-size:10px;font-weight:850;border-radius:999px;padding:4px 8px}
+.mode-chip.room{background:var(--green-soft);color:var(--green)}
+.mode-chip.cryo{background:var(--blue-soft);color:var(--blue)}
+.cond-mini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.cond-box{border:1px solid #e1e8e4;background:#fafcfb;border-radius:7px;padding:5px 6px;min-height:44px}
+.cond-box.changed{border-color:#efbcbc;background:var(--red-soft)}
+.cond-box .k{font-size:9px;color:#829087}.cond-box.changed .k{color:var(--red);font-weight:850}
+.cond-box .v{font-size:11px;font-weight:850;margin-top:3px;color:#314038}.cond-box.changed .v{color:#bd3f3f}
+.rep-wrap{border:1px solid #e0e8e3;border-radius:9px;padding:9px;background:#fbfdfc}
+.rep-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}
+.rep-title{font-size:11px;font-weight:850}.rep-hint{font-size:10px;color:#85918a}
+.rep-img{height:138px;display:flex;align-items:center;justify-content:center;background:#f3f6f4;border-radius:7px;overflow:hidden}
+.rep-img img{width:auto;height:auto;max-width:100%;max-height:134px;object-fit:contain}
+.placeholder-sem{width:100%;height:100%;background:linear-gradient(#202328,#4b4f55);position:relative}
+.placeholder-sem:before{content:"";position:absolute;left:12%;right:12%;top:28%;height:50%;background:#9ba0a8;clip-path:polygon(0 45%,15% 45%,20% 0,38% 0,42% 45%,58% 45%,62% 0,80% 0,85% 45%,100% 45%,100% 100%,0 100%)}
+.detail-panel{display:none;margin-top:8px}.detail-panel.open{display:block}
+.detail-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.detail-item{border:1px solid #e4ebe7;border-radius:7px;padding:5px;background:#fff}
+.detail-frame{height:88px;background:#f4f6f5;border-radius:5px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.detail-frame img{max-width:100%;max-height:84px;object-fit:contain}
+.detail-name{text-align:center;font-size:9px;font-weight:800;margin-top:4px}
+.value-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:9px}
+.value-box{border:1px solid #e2e9e5;background:#fbfdfc;border-radius:7px;padding:5px 6px;min-height:42px}
+.value-box .k{font-size:9px;color:#849087}.value-box .v{font-size:12px;font-weight:900;margin-top:2px}
+.empty{padding:28px;text-align:center;color:#8d9892;border:1px dashed #d9e1dc;border-radius:10px;background:#fbfcfc}
+.project-hero{border:1px solid #d5e6dc;background:linear-gradient(135deg,#f7fcf9,#fff);border-radius:14px;padding:20px}
+.goal-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.goal{border:1px solid #dce8e1;border-radius:9px;padding:11px;background:#fff}.goal .yr{font-size:10px;color:#7e8983}.goal b{font-size:18px;color:var(--green-dark);display:block;margin-top:3px}
+.info-list{display:grid;gap:8px}
+.info-row{display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid #edf1ef;padding-bottom:8px}
+.info-row:last-child{border-bottom:0;padding-bottom:0}
+.info-no{width:25px;height:25px;border-radius:50%;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex:none}
+.info-text b{font-size:12px}.info-text p{margin:3px 0 0;font-size:11px;color:#718078;line-height:1.55}
+.wafer-stack{display:flex;align-items:stretch;border-radius:9px;overflow:hidden;border:1px solid var(--line);height:70px;margin-top:9px}
+.layer{display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:850;padding:5px;min-width:48px}
+.layer:nth-child(1),.layer:nth-child(3){background:#f1f4f3}.layer:nth-child(2){background:#d7d9d8}.layer:nth-child(4){background:#dcece3;flex:2}.layer:nth-child(5){background:#e7ebea}.layer:nth-child(6){background:#f1f3f3}.layer:nth-child(7){background:#d5d7d8;flex:1.2}
+.doc-layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:12px}
+.doc-list{display:grid;gap:8px}
+.doc-card{border:1px solid var(--line);border-radius:9px;padding:10px;background:#fff;cursor:pointer}
+.doc-card:hover,.doc-card.active{border-color:#aacbb8;background:#f8fcfa}
+.doc-type{font-size:9px;color:#7f8c85}.doc-title{font-size:12px;font-weight:850;margin-top:3px}.doc-meta{font-size:10px;color:#8d9892;margin-top:3px}
+.viewer{min-height:520px;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.viewer-head{padding:10px 12px;border-bottom:1px solid var(--line);font-size:11px;font-weight:850;display:flex;justify-content:space-between}
+.viewer-body{height:475px;overflow:auto;padding:10px;background:#fafbfb}
+.viewer iframe{width:100%;height:100%;border:0;background:#fff}
+.viewer img{max-width:100%;display:block;margin:auto}
+.viewer table{font-size:11px;background:#fff}
+.viewer pre{white-space:pre-wrap;font-size:11px}
+.upload-drop{border:1px dashed #a9c6b5;border-radius:9px;padding:12px;text-align:center;background:#f8fcfa;margin-top:8px}
+.upload-drop input{max-width:100%;font-size:11px}
+.warning{font-size:10px;color:#8a6f3d;background:#fffaf0;border:1px solid #eadcb9;border-radius:8px;padding:8px 10px;margin-top:8px}
+.damage-targets{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.target-card{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}
+.target-card .t{font-size:10px;color:#7d8982}.target-card .n{font-size:23px;font-weight:900;margin-top:4px}.target-card.baseline .n{color:#6d7772}.target-card.y1 .n{color:var(--green)}.target-card.final .n{color:#1f6245}
+.damage-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.damage-side{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fbfdfc}
+.damage-side h3{font-size:14px}
+.damage-values{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.damage-results{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.damage-result{border:1px solid #dce6e1;border-radius:8px;padding:9px;background:#fff}
+.damage-result .k{font-size:9px;color:#7e8b84}.damage-result .v{font-size:17px;font-weight:900;margin-top:4px}
+.reference{border-left:3px solid var(--green);padding:7px 0 7px 12px;font-size:11px;color:#66736c;line-height:1.6}
+.paper-ref{border-left-color:var(--blue)}
+.damage-list{display:grid;gap:10px}
+.damage-card{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}
+.damage-card-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.damage-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}
+.damage-kpi{background:#f8faf9;border:1px solid #e3e9e6;border-radius:7px;padding:8px}.damage-kpi .k{font-size:9px;color:#829087}.damage-kpi .v{font-size:14px;font-weight:900;margin-top:3px}
+@media(max-width:1300px){
+  .form-grid{grid-template-columns:repeat(4,1fr)}
+  .upload-grid{grid-template-columns:repeat(4,1fr)}
+  .compare-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .doc-layout{grid-template-columns:300px minmax(0,1fr)}
+}
+@media(max-width:900px){
+  .sidebar{width:180px}.main{padding:17px}
+  .compare-cards{grid-template-columns:1fr}
+  .g2,.g3,.g4,.goal-flow,.damage-targets,.damage-form,.doc-layout{grid-template-columns:1fr}
+  .form-grid,.measure-grid,.compare-controls,.upload-grid,.cond-mini,.value-grid,.detail-grid,.damage-values,.damage-results,.damage-kpis{grid-template-columns:repeat(2,1fr)}
+}
+
+.project-eyebrow{font-size:10px;font-weight:900;letter-spacing:.12em;color:#78857e;margin-bottom:6px}
+.project-clean-head{display:flex;justify-content:space-between;gap:24px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.project-clean-title{font-size:18px;font-weight:900;color:#26362e}
+.project-clean-desc{margin-top:7px;font-size:12px;color:#727f78;line-height:1.65;max-width:720px}
+.project-targets-inline{display:flex;gap:18px;flex:none}
+.project-targets-inline>div{min-width:92px;text-align:right}
+.project-targets-inline span{display:block;font-size:9px;color:#8a958f}
+.project-targets-inline b{display:block;margin-top:3px;font-size:15px;color:#31483b}
+.project-two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.project-section{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+.project-section-title{font-size:13px;font-weight:900;color:#33433b;margin-bottom:12px}
+.project-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.project-line-list{display:grid;gap:0}
+.project-line-list>div{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #edf1ef}
+.project-line-list>div:last-child{border-bottom:0}
+.project-line-list b{width:26px;font-size:9px;color:#8c9891}
+.project-line-list span{font-size:12px;color:#3d4b44}
+.stack-clean{display:flex;width:100%;overflow:hidden;border:1px solid #e2e8e4;border-radius:8px;background:#fafbfa}
+.stack-clean>div{flex:1;min-width:72px;padding:10px 7px;text-align:center;border-right:1px solid #e5eae7}
+.stack-clean>div:last-child{border-right:0}
+.stack-clean>div.ulk{flex:1.7;background:#f0f7f3}
+.stack-clean span{display:block;font-size:9px;color:#818d86}
+.stack-clean b{display:block;margin-top:4px;font-size:10px;color:#34443b}
+.project-meta-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.project-meta-row>div{border:1px solid #e5ebe7;border-radius:8px;padding:9px 10px;background:#fbfcfb}
+.project-meta-row span{display:block;font-size:9px;color:#87928c}
+.project-meta-row b{display:block;margin-top:3px;font-size:12px}
+.project-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.project-metrics>div{border-left:2px solid #b7cfc0;padding:3px 0 3px 10px}
+.project-metrics span{display:block;font-size:9px;color:#87938c}
+.project-metrics b{display:block;margin-top:4px;font-size:11px;line-height:1.45;color:#3a4941}
+.clean-doc-layout{margin-top:12px}
+.clean-upload{background:#fbfcfb;border-color:#cad9d0}
+.clean-viewer{box-shadow:none}
+.viewer-state{font-size:9px;color:#95a09a;letter-spacing:.08em}
+@media(max-width:1050px){
+  .project-clean-head{align-items:flex-start;flex-direction:column}
+  .project-targets-inline{width:100%;justify-content:flex-start}
+  .project-targets-inline>div{text-align:left}
+  .project-two-col,.project-metrics{grid-template-columns:1fr}
+  .stack-clean{overflow:auto}
+}
+
+
+.docs-only-section{padding:12px}
+.docs-wide-layout{grid-template-columns:360px minmax(0,1fr);gap:12px;align-items:stretch}
+.docs-sidebar{min-width:0}
+.doc-card{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.doc-card-main{min-width:0;flex:1}
+.doc-actions{display:flex;gap:4px;flex:none}
+.doc-mini-btn{
+  border:1px solid #dce5e0;background:#fff;color:#59675f;border-radius:6px;
+  padding:5px 7px;font-size:9px;font-weight:800;cursor:pointer
+}
+.doc-mini-btn:hover{background:#f7fbf8;border-color:#a9c5b3;color:#2f7d5a}
+.doc-mini-btn.download{color:#2f7d5a}
+.doc-upload-box{padding:16px 10px;margin-top:10px}
+.viewer-xl{min-height:790px}
+.viewer-xl .viewer-head{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.viewer-title-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+.viewer-title-wrap #viewerTitle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer-actions{display:flex;gap:5px;flex:none}
+.viewer-action-btn{
+  border:1px solid #dce5e0;background:#fff;color:#4c5a52;border-radius:7px;
+  padding:6px 9px;font-size:10px;font-weight:800;cursor:pointer
+}
+.viewer-action-btn:hover{background:#f7fbf8;border-color:#a9c5b3;color:#2f7d5a}
+.viewer-body-xl{height:730px;padding:8px}
+.viewer-body-xl iframe{width:100%;height:100%;min-height:710px;border:0}
+.excel-viewer{height:100%;display:flex;flex-direction:column;background:#fff}
+.excel-sheet-tabs{
+  display:flex;gap:5px;flex-wrap:wrap;padding:8px;border-bottom:1px solid #e2e8e4;
+  background:#f8faf9;position:sticky;top:0;z-index:3
+}
+.excel-tab{
+  border:1px solid #d9e3dd;background:#fff;color:#657168;border-radius:6px;
+  padding:6px 9px;font-size:10px;font-weight:800;cursor:pointer
+}
+.excel-tab.active{background:#eef7f2;border-color:#a7c7b4;color:#2f7d5a}
+.excel-sheet-body{flex:1;overflow:auto;padding:8px}
+.excel-sheet-body table{border-collapse:collapse;font-size:11px;min-width:max-content}
+.excel-sheet-body td,.excel-sheet-body th{
+  border:1px solid #dfe6e2;padding:6px 8px;text-align:left;white-space:nowrap
+}
+.doc-card.has-file{border-color:#a8c9b5;background:#f8fcfa}
+@media(max-width:1250px){.docs-wide-layout{grid-template-columns:300px minmax(0,1fr)}}
+@media(max-width:900px){
+  .docs-wide-layout{grid-template-columns:1fr}
+  .viewer-xl{min-height:620px}
+  .viewer-body-xl{height:560px}
+}
+
+
+.doc-mini-btn.delete{
+  color:#b64b4b;
+  border-color:#ead0d0;
+}
+.doc-mini-btn.delete:hover{
+  color:#a23838;
+  border-color:#dcaeae;
+  background:#fff7f7;
+}
+
+
+.doc-meta-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:rgba(20,28,24,.28);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.doc-meta-dialog{
+  width:min(460px,100%);
+  background:#fff;
+  border:1px solid #dfe7e2;
+  border-radius:13px;
+  box-shadow:0 18px 50px rgba(24,45,34,.16);
+  padding:16px;
+}
+.doc-meta-dialog-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+.doc-meta-dialog-title{
+  font-size:15px;
+  font-weight:900;
+  color:#2d3d34;
+}
+.doc-meta-dialog-sub{
+  margin-top:4px;
+  font-size:11px;
+  color:#839088;
+}
+.doc-meta-close{
+  border:0;
+  background:transparent;
+  color:#7b8881;
+  font-size:22px;
+  line-height:1;
+  cursor:pointer;
+  padding:0 3px;
+}
+.doc-meta-form{
+  display:grid;
+  gap:11px;
+  margin-top:16px;
+}
+.doc-meta-form label span{
+  display:block;
+  margin-bottom:5px;
+  font-size:10px;
+  font-weight:850;
+  color:#536159;
+}
+.doc-meta-form input{
+  width:100%;
+  border:1px solid #dce4df;
+  border-radius:8px;
+  padding:10px 11px;
+  font-size:12px;
+}
+.doc-meta-form input:focus{
+  outline:none;
+  border-color:#95baa3;
+  box-shadow:0 0 0 3px rgba(47,125,90,.08);
+}
+.doc-meta-preview{
+  margin-top:13px;
+  border:1px solid #e1e8e4;
+  background:#fafcfb;
+  border-radius:9px;
+  padding:11px 12px;
+}
+.doc-meta-preview span{
+  display:block;
+  font-size:9px;
+  color:#7f8d85;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.doc-meta-preview b{
+  display:block;
+  margin-top:4px;
+  font-size:12px;
+  color:#2f3e35;
+}
+.doc-meta-dialog-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+  margin-top:15px;
+}
+
+
+/* Clean sidebar */
+.brand{padding-left:12px}
+.nav{position:relative;padding-left:13px}
+.nav::before{content:none !important}
+
+/* Clean document cards */
+.doc-list{gap:7px}
+.doc-card{
+  min-height:72px;
+  padding:11px 12px;
+}
+.doc-card-main{padding-right:8px}
+.doc-type{
+  font-size:8px;
+  letter-spacing:.04em;
+  color:#8b9790;
+}
+.doc-title{
+  font-size:12px;
+  line-height:1.35;
+}
+.doc-meta{
+  font-size:9px;
+  margin-top:4px;
+}
+.doc-manage-btn{
+  border:1px solid #dce5e0;
+  background:#fff;
+  color:#68746e;
+  border-radius:7px;
+  padding:6px 9px;
+  font-size:9px;
+  font-weight:800;
+  flex:none;
+}
+.doc-manage-btn:hover{
+  border-color:#aac4b5;
+  color:#2f7d5a;
+  background:#f8fbf9;
+}
+.doc-actions{display:none !important}
+.doc-mini-btn{display:none !important}
+
+.doc-manage-dialog{width:min(480px,100%)}
+.manage-file-box{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:14px;
+  border:1px solid #e1e8e4;
+  border-radius:9px;
+  padding:11px 12px;
+  background:#fafcfb;
+}
+.manage-file-label{font-size:9px;color:#89958e}
+.manage-file-name{
+  margin-top:4px;
+  font-size:11px;
+  font-weight:800;
+  color:#3e4b44;
+  max-width:250px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.manage-action-row{
+  display:flex;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:8px;
+}
+.manage-delete{
+  color:#b64b4b;
+  border-color:#ead0d0;
+}
+.manage-delete:hover{
+  color:#a23838;
+  border-color:#dcaeae;
+  background:#fff7f7;
+}
+
+/* Damage archive */
+.damage-archive-toolbar{
+  display:grid;
+  grid-template-columns:minmax(260px,1fr) 180px;
+  gap:10px;
+  align-items:end;
+}
+.damage-archive-kpis .num{font-size:22px}
+@media(max-width:900px){
+  .damage-archive-toolbar{grid-template-columns:1fr}
+}
+
+
+/* Stable inline SVG navigation */
+.brand{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:var(--green);
+}
+.brand-icon{
+  width:23px;
+  height:23px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
+}
+.brand-icon svg,
+.nav-icon svg{
+  width:100%;
+  height:100%;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.nav{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.nav-icon{
+  width:17px;
+  height:17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
+  color:#718078;
+}
+.nav.active .nav-icon,
+.nav:hover .nav-icon{
+  color:var(--green);
+}
+.small{
+  font-size:9px;
+  letter-spacing:.1em;
+  font-weight:850;
+  color:#9aa59f;
+}
+.saved-data-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+.saved-data-tools{
+  display:flex;
+  gap:7px;
+}
+.saved-data-tools select,
+.saved-data-tools input{
+  border:1px solid #dce4df;
+  background:#fff;
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:11px;
+}
+.saved-data-tools input{min-width:210px}
+.table-delete-btn{
+  border:1px solid #ead0d0;
+  background:#fff;
+  color:#b64b4b;
+  border-radius:6px;
+  padding:5px 8px;
+  font-size:9px;
+  font-weight:800;
+}
+.table-delete-btn:hover{
+  background:#fff7f7;
+  border-color:#dbaaaa;
+}
+@media(max-width:900px){
+  .saved-data-head{align-items:stretch;flex-direction:column}
+  .saved-data-tools{width:100%}
+  .saved-data-tools select,.saved-data-tools input{flex:1;min-width:0}
+}
+
+
+/* Brand */
+.brand{
+  display:block;
+  font-size:20px;
+  font-weight:900;
+  color:var(--green);
+  padding:8px 10px 20px;
+}
+.brand-icon{display:none!important}
+
+/* Help */
+.help-clean-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.help-clean-card{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:15px 16px;
+}
+.help-step{
+  width:30px;
+  flex:none;
+  font-size:10px;
+  font-weight:900;
+  color:#8b9891;
+  padding-top:2px;
+}
+.help-title{
+  font-size:13px;
+  font-weight:900;
+  color:#314038;
+}
+.help-desc{
+  font-size:11px;
+  line-height:1.6;
+  color:#76827b;
+  margin-top:5px;
+}
+.help-note-card{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#fbfcfb;
+  padding:14px 16px;
+}
+.help-note-title{
+  font-size:11px;
+  font-weight:900;
+  color:#46544c;
+}
+.help-note-text{
+  margin-top:5px;
+  font-size:10px;
+  color:#7d8982;
+  line-height:1.65;
+}
+
+/* Change Log */
+.changelog-section{
+  margin-top:12px;
+}
+.changelog-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+.changelog-add-btn{
+  padding:7px 12px;
+  font-size:10px;
+}
+.changelog-list{
+  display:grid;
+  gap:7px;
+  margin-top:12px;
+}
+.changelog-item{
+  display:grid;
+  grid-template-columns:120px minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  border:1px solid #e1e8e4;
+  border-radius:9px;
+  background:#fff;
+  padding:10px 11px;
+}
+.changelog-date{
+  font-size:10px;
+  font-weight:850;
+  color:#6e7b74;
+}
+.changelog-desc{
+  font-size:11px;
+  line-height:1.5;
+  color:#34423a;
+}
+.changelog-actions{
+  display:flex;
+  gap:5px;
+}
+.changelog-btn{
+  border:1px solid #dce5e0;
+  background:#fff;
+  color:#647169;
+  border-radius:6px;
+  padding:5px 8px;
+  font-size:9px;
+  font-weight:800;
+}
+.changelog-btn:hover{
+  color:#2f7d5a;
+  border-color:#aac4b5;
+  background:#f8fbf9;
+}
+.changelog-btn.delete{
+  color:#b64b4b;
+  border-color:#ead0d0;
+}
+.changelog-empty{
+  border:1px dashed #d9e2dc;
+  border-radius:9px;
+  padding:22px;
+  text-align:center;
+  color:#929d97;
+  font-size:11px;
+  background:#fbfcfb;
+}
+.changelog-dialog textarea{
+  width:100%;
+  border:1px solid #dce4df;
+  border-radius:8px;
+  padding:10px 11px;
+  font-size:12px;
+  resize:vertical;
+}
+.changelog-dialog textarea:focus{
+  outline:none;
+  border-color:#95baa3;
+  box-shadow:0 0 0 3px rgba(47,125,90,.08);
+}
+@media(max-width:900px){
+  .help-clean-grid{grid-template-columns:1fr}
+  .changelog-item{grid-template-columns:1fr}
+  .changelog-actions{justify-content:flex-start}
+}
+
+
+/* Help page: restore compact previous layout */
+.help-changelog-card{
+  padding:18px 20px;
+}
+.help-changelog-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+}
+.help-changelog-add{
+  padding:8px 13px;
+  font-size:10px;
+}
+.help-changelog-rule{
+  height:1px;
+  background:#e6ebe8;
+  margin:15px 0 12px;
+}
+.help-changelog-list{
+  gap:6px;
+  margin-top:0;
+}
+.help-changelog-list .changelog-item{
+  grid-template-columns:130px minmax(0,1fr) auto;
+  min-height:52px;
+  border:0;
+  border-bottom:1px solid #edf1ef;
+  border-radius:0;
+  padding:10px 2px;
+}
+.help-changelog-list .changelog-item:last-child{
+  border-bottom:0;
+}
+.help-changelog-list .changelog-date{
+  font-size:10px;
+  color:#76837c;
+}
+.help-changelog-list .changelog-desc{
+  font-size:11px;
+  color:#34423a;
+  line-height:1.55;
+}
+.help-changelog-list .changelog-empty{
+  border:0;
+  background:#fafbfa;
+  padding:28px;
+}
+@media(max-width:900px){
+  .help-changelog-head{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .help-changelog-list .changelog-item{
+    grid-template-columns:1fr;
+    gap:7px;
+  }
+}
+
+
+.auth-box{
+  margin-top:auto;
+  border:1px solid #e0e7e3;
+  background:#fbfcfb;
+  border-radius:10px;
+  padding:10px;
+}
+.auth-state{
+  font-size:10px;
+  color:#7c8882;
+  margin-bottom:7px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.auth-login-btn{
+  width:100%;
+  border:1px solid #cfe0d6;
+  background:#fff;
+  color:#2f7d5a;
+  border-radius:8px;
+  padding:8px 9px;
+  font-size:10px;
+  font-weight:850;
+  cursor:pointer;
+}
+.auth-login-btn:hover{
+  background:#f2f8f4;
+}
+.admin-only.is-hidden,
+.admin-only-block.is-hidden{
+  display:none !important;
+}
+.admin-only-inline.is-hidden{
+  display:none !important;
+}
+.version{
+  margin-top:8px;
+}
+.login-required-note{
+  border:1px solid #dfe7e2;
+  background:#fbfcfb;
+  color:#75817b;
+  border-radius:9px;
+  padding:12px;
+  font-size:11px;
+  text-align:center;
+}
+
+
+.table-actions{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.table-edit-btn{
+  border:1px solid #b9d4c4;
+  background:#fff;
+  color:#2f7d5a;
+  border-radius:6px;
+  padding:5px 8px;
+  font-size:9px;
+  font-weight:800;
+  cursor:pointer;
+}
+.table-edit-btn:hover{
+  background:#f2f8f4;
+  border-color:#8fb69e;
+}
+.edit-notice{
+  margin-top:10px;
+  border:1px solid #bdd8c8;
+  background:#f3f9f5;
+  color:#426653;
+  border-radius:8px;
+  padding:9px 11px;
+  font-size:10px;
+  line-height:1.5;
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><span>Low-k</span></div>
+
+  <div class="nav active" data-view="dashboard" onclick="showView('dashboard')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg></span><span>대시보드</span></div>
+
+  <div class="sep"></div>
+  <div class="small">DATA</div>
+  <div class="nav admin-only" data-view="upload" onclick="showView('upload')"><span class="nav-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></span><span>실험 Data</span></div>
+  <div class="nav" data-view="compare" onclick="showView('compare')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 19V9"/><path d="M12 19V5"/><path d="M19 19v-7"/><path d="M3 19h18"/></svg></span><span>실험 비교</span></div>
+  <div class="nav admin-only" data-view="damage" onclick="showView('damage')"><span class="nav-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/><path d="M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg></span><span>Damage Data</span></div>
+  <div class="nav" data-view="damageArchive" onclick="showView('damageArchive')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 18h5V9H4z"/><path d="M15 18h5V5h-5z"/><path d="M10.5 7.5 13 5l-2.5-2.5"/><path d="M13 5H8"/></svg></span><span>Damage 비교</span></div>
+
+  <div class="sep"></div>
+  <div class="small">PROJECT</div>
+  <div class="nav" data-view="project" onclick="showView('project')"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 6.5h6l2 2H20.5v10H3.5z"/><path d="M3.5 8.5h17"/></svg></span><span>Low-k 과제 정보</span></div>
+  <div class="nav" data-view="help" onclick="showView('help')"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.3 2.3 0 0 1 4.5.7c0 1.8-2.3 2.1-2.3 3.8"/><path d="M12 17.2h.01"/></svg></span><span>도움말</span></div>
+
+  
+  <div class="auth-box">
+    <div class="auth-state" id="authStatus">공개 보기 모드</div>
+    <button class="auth-login-btn" id="authButton" onclick="handleAuthButton()">관리자 로그인</button>
+  </div>
+  <div class="version">Low-k<br>GitHub Pages</div>
+
+</aside>
+
+<main class="main">
+<section id="dashboard" class="view active">
+  <div class="topbar">
+    <div><h1>Low-k 실험 데이터 대시보드</h1><div class="subtitle">상온 / 극저온 Etch profile과 DHF Damage 데이터를 한 곳에서 관리하는 구조 테스트 버전입니다.</div></div>
+    <div class="segment">
+      <button class="seg-btn active room" onclick="showView('compare');setCompareMode('room')">상온 보기</button>
+      <button class="seg-btn cryo" onclick="showView('compare');setCompareMode('cryo')">극저온 보기</button>
+    </div>
+  </div>
+
+  <div class="grid g3">
+    <div class="card">
+      <div class="mode-chip room">상온</div>
+      <h3 style="margin:9px 0 5px">Room-temperature Profile</h3>
+      <div class="subtitle">Ar / C₄F₈ / O₂ 기반 profile 데이터를 조건별로 비교합니다.</div>
+      <button class="btn" style="margin-top:12px" onclick="showView('compare');setCompareMode('room')">상온 비교 →</button>
+    </div>
+    <div class="card">
+      <div class="mode-chip cryo">극저온</div>
+      <h3 style="margin:9px 0 5px">Cryogenic Profile</h3>
+      <div class="subtitle">우선 Ar / SF₆ 기반 cryogenic recipe를 따로 누적하도록 구성했습니다.</div>
+      <button class="btn" style="margin-top:12px" onclick="showView('compare');setCompareMode('cryo')">극저온 비교 →</button>
+    </div>
+    <div class="card">
+      <div class="mode-chip room">PID</div>
+      <h3 style="margin:9px 0 5px">DHF Damage</h3>
+      <div class="subtitle">Before / After DHF의 Top CD, Depth, Angle 변화를 따로 저장합니다.</div>
+      <button class="btn" style="margin-top:12px" onclick="showView('damage')">Damage 데이터 →</button>
+    </div>
+  </div>
+
+  <div class="grid g3" style="margin-top:14px">
+    <div class="kpi"><div class="label">상온 실험 수</div><div class="num" id="dashRoom">0</div><div class="desc">Room temperature</div></div>
+    <div class="kpi"><div class="label">극저온 실험 수</div><div class="num" id="dashCryo">0</div><div class="desc">Cryogenic</div></div>
+    <div class="kpi"><div class="label">Damage pair</div><div class="num" id="dashDamage">0</div><div class="desc">Before / After DHF</div></div>
+  </div>
+</section>
+
+<section id="upload" class="view">
+  <div class="topbar">
+    <div><h1>실험 Data</h1><div class="subtitle">상온 / 극저온 실험 조건, SEM 이미지, 측정값을 입력하고 저장된 데이터를 확인합니다.</div></div>
+    <div>
+      <div class="mode-label">실험 유형</div>
+      <div class="segment">
+        <button id="upRoom" class="seg-btn active room" onclick="setUploadMode('room')">상온</button>
+        <button id="upCryo" class="seg-btn cryo" onclick="setUploadMode('cryo')">극저온</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>1. 실험 조건</h3>
+    <div class="form-grid">
+      <div class="field"><label>Source Power (W)</label><input id="source" type="number" value="300"></div>
+      <div class="field"><label>Bias</label><input id="bias" value="+600V / -600V"></div>
+      <div class="field"><label>Ar (sccm)</label><input id="ar" type="number" value="200"></div>
+      <div class="field" id="gasMainField"><label id="gasMainLabel">C₄F₈ (sccm)</label><input id="gasMain" type="number" value="50"></div>
+      <div class="field" id="o2Field"><label>O₂ (sccm)</label><input id="o2" type="number" value="10"></div>
+      <div class="field"><label>Pressure (mTorr)</label><input id="pressure" type="number" value="30"></div>
+      <div class="field"><label>Time (sec)</label><input id="time" type="number" value="60"></div>
+      <div class="field"><label>Chuck Temp. (℃)</label><input id="temp" type="number" value="20"></div>
+    </div>
+    <div class="note" id="modeNote" style="margin-top:10px">상온: Ar / C₄F₈ / O₂ 기반 profile 조건을 저장합니다.</div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>2. SEM 이미지 8개</h3>
+    <div class="upload-grid" id="uploadGrid"></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>3. 측정값</h3>
+    <div class="measure-grid">
+      <div class="field"><label>Mask (nm)</label><input id="mask" type="number"></div>
+      <div class="field"><label>Depth (nm)</label><input id="depth" type="number" oninput="autoCalcAngle()"></div>
+      <div class="field"><label>Top CD (nm)</label><input id="topcd" type="number" oninput="autoCalcAngle()"></div>
+      <div class="field"><label>Middle CD (nm)</label><input id="middlecd" type="number"></div>
+      <div class="field"><label>Bottom CD (nm)</label><input id="bottomcd" type="number" oninput="autoCalcAngle()"></div>
+      <div class="field"><label>Left Angle (°) <span style="color:#98a19c;font-weight:500">(선택)</span></label><input id="leftangle" type="number" step="0.01"></div>
+      <div class="field"><label>Right Angle (°) <span style="color:#98a19c;font-weight:500">(선택)</span></label><input id="rightangle" type="number" step="0.01"></div>
+      <div class="field"><label>계산 Angle (°)</label><input id="calcangle" type="number" step="0.01" oninput="calcManual=true"></div>
+    </div>
+    <div class="field" style="margin-top:9px"><label>메모</label><textarea id="memo" rows="2" placeholder="profile 특징, 조건 선정 이유 등"></textarea></div>
+    <div id="expEditNotice" class="edit-notice" style="display:none"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+      <button id="expResetBtn" class="btn admin-only-inline" onclick="resetUpload()">초기화</button>
+      <button id="expSaveBtn" class="btn primary admin-only-inline" onclick="saveExperiment()">저장하기</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="saved-data-head">
+      <div>
+        <h3 style="margin-bottom:2px">저장된 실험 데이터</h3>
+        <div class="subtitle">상온 / 극저온 데이터를 검색하고 확인합니다.</div>
+      </div>
+      <div class="saved-data-tools">
+        <select id="expDataMode" onchange="renderExperimentData()">
+          <option value="">전체</option>
+          <option value="room">상온</option>
+          <option value="cryo">극저온</option>
+        </select>
+        <input id="expDataSearch" oninput="renderExperimentData()" placeholder="ID / 메모 검색">
+      </div>
+    </div>
+    <div id="experimentDataTable" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section id="compare" class="view">
+  <div class="topbar">
+    <div><h1>실험 비교</h1><div class="subtitle">상온 / 극저온을 분리하여 gas 조건에 맞는 필터만 보여줍니다.</div></div>
+    <div class="segment">
+      <button id="cmpRoom" class="seg-btn active room" onclick="setCompareMode('room')">상온</button>
+      <button id="cmpCryo" class="seg-btn cryo" onclick="setCompareMode('cryo')">극저온</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="compare-controls" id="compareControls"></div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <div class="note" id="compareSummary">상온 데이터 전체</div>
+  </div>
+  <div class="compare-cards" id="compareCards"></div>
+</section>
+
+<section id="damage" class="view">
+  <div class="topbar">
+    <div><h1>Damage Data</h1><div class="subtitle">Profile 데이터와 분리해서 Before / After DHF pair 중심으로 PID를 비교하도록 구성했습니다.</div></div></div>
+
+  <div class="damage-targets">
+    <div class="target-card baseline"><div class="t">상온 CW 기준 PID</div><div class="n">~25 nm</div><div class="subtitle">과제 baseline</div></div>
+    <div class="target-card y1"><div class="t">1년차 목표</div><div class="n">≤ 12.5 nm</div><div class="subtitle">50% reduction</div></div>
+    <div class="target-card final"><div class="t">최종 목표</div><div class="n">≤ 6.25 nm</div><div class="subtitle">75% reduction</div></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h3>Damage pair 등록</h3>
+    <div class="toolbar" style="margin-bottom:10px">
+      <div class="field"><label>실험 ID / 이름</label><input id="dmgName" placeholder="예: RT-CW-01 / CRYO-SF6-03"></div>
+      <div class="field"><label>유형</label><select id="dmgMode"><option value="room">상온</option><option value="cryo">극저온</option></select></div>
+      <div class="field"><label>DHF 조건</label><input id="dmgDHF" value="0.5% HF / 60 sec"></div>
+    </div>
+
+    <div class="damage-form">
+      <div class="damage-side">
+        <h3>Before DHF</h3>
+        <div class="damage-values">
+          <div class="field"><label>Top CD (nm)</label><input id="bTop" type="number" oninput="calcDamage()"></div>
+          <div class="field"><label>Depth (nm)</label><input id="bDepth" type="number" oninput="calcDamage()"></div>
+          <div class="field"><label>Angle (°)</label><input id="bAngle" type="number" step="0.01" oninput="calcDamage()"></div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>Representative SEM</label><input id="bImg" type="file" accept="image/*" onchange="damagePreview(event,'bPrev')"></div>
+        <div class="thumb" id="bPrev" style="height:145px;margin-top:6px">Before DHF</div>
+      </div>
+      <div class="damage-side">
+        <h3>After DHF</h3>
+        <div class="damage-values">
+          <div class="field"><label>Top CD (nm)</label><input id="aTop" type="number" oninput="calcDamage()"></div>
+          <div class="field"><label>Depth (nm)</label><input id="aDepth" type="number" oninput="calcDamage()"></div>
+          <div class="field"><label>Angle (°)</label><input id="aAngle" type="number" step="0.01" oninput="calcDamage()"></div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>Representative SEM</label><input id="aImg" type="file" accept="image/*" onchange="damagePreview(event,'aPrev')"></div>
+        <div class="thumb" id="aPrev" style="height:145px;margin-top:6px">After DHF</div>
+      </div>
+    </div>
+
+    <div class="damage-results">
+      <div class="damage-result"><div class="k">Δ Top CD</div><div class="v" id="rTop">-</div><div class="subtitle">Side damage indicator</div></div>
+      <div class="damage-result"><div class="k">Per-side estimate</div><div class="v" id="rSide">-</div><div class="subtitle">대칭 가정 시 ΔTCD / 2</div></div>
+      <div class="damage-result"><div class="k">Δ Depth</div><div class="v" id="rDepth">-</div><div class="subtitle">Bottom damage indicator</div></div>
+      <div class="damage-result"><div class="k">Δ Angle</div><div class="v" id="rAngle">-</div><div class="subtitle">Profile change</div></div>
+    </div>
+    <div class="warning">Per-side estimate(ΔTop CD/2)는 좌우 damage가 대칭이라는 가정 하의 보조값입니다. 실제 과제 지표는 ΔTop CD 자체와 함께 보관하는 형태가 안전합니다.</div>
+    <div id="damageEditNotice" class="edit-notice" style="display:none"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+      <button id="damageResetBtn" class="btn admin-only-inline" onclick="resetDamage()">초기화</button>
+      <button id="damageSaveBtn" class="btn primary admin-only-inline" onclick="saveDamage()">Damage 저장</button>
+    </div>
+  </div>
+</section>
+
+
+<section id="damageArchive" class="view">
+  <div class="topbar">
+    <div>
+      <h1>Damage 비교</h1>
+      <div class="subtitle">저장된 DHF Before / After 결과를 상온 / 극저온 기준으로 비교합니다.</div>
+    </div>
+    <div class="segment">
+      <button id="arcAll" class="seg-btn active room" onclick="setArchiveFilter('all')">전체</button>
+      <button id="arcRoom" class="seg-btn room" onclick="setArchiveFilter('room')">상온</button>
+      <button id="arcCryo" class="seg-btn cryo" onclick="setArchiveFilter('cryo')">극저온</button>
+    </div>
+  </div>
+
+  <div class="grid g4 damage-archive-kpis">
+    <div class="kpi"><div class="label">전체 Damage</div><div class="num" id="arcCount">0</div><div class="desc">저장된 pair</div></div>
+    <div class="kpi"><div class="label">평균 ΔTop CD</div><div class="num" id="arcAvgTop">-</div><div class="desc">nm</div></div>
+    <div class="kpi"><div class="label">평균 ΔDepth</div><div class="num" id="arcAvgDepth">-</div><div class="desc">nm</div></div>
+    <div class="kpi"><div class="label">평균 ΔAngle</div><div class="num" id="arcAvgAngle">-</div><div class="desc">degree</div></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="damage-archive-toolbar">
+      <div class="field">
+        <label>검색</label>
+        <input id="arcSearch" placeholder="실험 ID / 이름 / DHF 조건" oninput="renderDamageArchive()">
+      </div>
+      <div class="field">
+        <label>정렬</label>
+        <select id="arcSort" onchange="renderDamageArchive()">
+          <option value="new">최신순</option>
+          <option value="topAsc">ΔTop CD 작은순</option>
+          <option value="topDesc">ΔTop CD 큰순</option>
+        </select>
+      </div>
+    </div>
+    <div class="damage-list" id="damageArchiveList" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section id="project" class="view">
+  <div class="topbar" style="margin-bottom:12px">
+    <div>
+      <div class="project-eyebrow">LOW-K PROJECT</div>
+      <h1>과제 자료</h1>
+      <div class="subtitle">회의록, 논문, 학위논문, 과제 계획서, 과제 정보 Excel을 한 곳에서 확인합니다.</div>
+    </div>
+  </div>
+
+  <div class="project-section docs-only-section">
+    <div class="doc-layout docs-wide-layout">
+      <div class="docs-sidebar">
+        <div class="project-section-title">관련 문서</div>
+        <div class="doc-list" id="docList">
+          <div class="doc-card active" data-slot="meeting" onclick="openManagedDoc('meeting',this)">
+            <div class="doc-card-main">
+              <div class="doc-type">MEETING NOTE</div>
+              <div class="doc-title">Low-k 회의 정리 (26.06.30)</div>
+              <div class="doc-meta">파일 연결 가능</div>
+            </div>
+            <button class="doc-manage-btn admin-only-inline" onclick="event.stopPropagation();openManagedDocModal('meeting')">관리</button>
+          </div>
+
+          <div class="doc-card" data-slot="paper" onclick="openManagedDoc('paper',this)">
+            <div class="doc-card-main">
+              <div class="doc-type">REFERENCE</div>
+              <div class="doc-title">Tak et al., Materials Express (2020)</div>
+              <div class="doc-meta">파일 연결 가능</div>
+            </div>
+            <button class="doc-manage-btn admin-only-inline" onclick="event.stopPropagation();openManagedDocModal('paper')">관리</button>
+          </div>
+
+          <div class="doc-card" data-slot="thesis" onclick="openManagedDoc('thesis',this)">
+            <div class="doc-card-main">
+              <div class="doc-type">THESIS</div>
+              <div class="doc-title">장준기 선배님 학위논문</div>
+              <div class="doc-meta">업로드 예정</div>
+            </div>
+            <button class="doc-manage-btn admin-only-inline" onclick="event.stopPropagation();openManagedDocModal('thesis')">관리</button>
+          </div>
+
+          <div class="doc-card" data-slot="plan" onclick="openManagedDoc('plan',this)">
+            <div class="doc-card-main">
+              <div class="doc-type">PROJECT</div>
+              <div class="doc-title">과제 계획서</div>
+              <div class="doc-meta">업로드 예정</div>
+            </div>
+            <button class="doc-manage-btn admin-only-inline" onclick="event.stopPropagation();openManagedDocModal('plan')">관리</button>
+          </div>
+
+          <div class="doc-card" data-slot="excel" onclick="openManagedDoc('excel',this)">
+            <div class="doc-card-main">
+              <div class="doc-type">DATA</div>
+              <div class="doc-title">과제 정보 Excel</div>
+              <div class="doc-meta">업로드 예정</div>
+            </div>
+            <button class="doc-manage-btn admin-only-inline" onclick="event.stopPropagation();openManagedDocModal('excel')">관리</button>
+          </div>
+        </div>
+
+        <div class="upload-drop clean-upload doc-upload-box admin-only-block">
+          <div style="font-size:12px;font-weight:850">문서 추가</div>
+          <div class="subtitle">PDF / 이미지 / XLSX / CSV / TXT</div>
+          <input id="docUpload" type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv,.txt" onchange="addLocalDoc(event)">
+        </div>
+      </div>
+
+      <div class="viewer clean-viewer viewer-xl">
+        <div class="viewer-head">
+          <div class="viewer-title-wrap">
+            <span id="viewerTitle">Low-k 회의 정리 (26.06.30)</span>
+            <span class="viewer-state">VIEWER</span>
+          </div>
+          <div id="viewerActions" class="viewer-actions"></div>
+        </div>
+        <div class="viewer-body viewer-body-xl" id="viewerBody"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="help" class="view">
+  <div class="topbar">
+    <div>
+      <h1>도움말</h1>
+      <div class="subtitle">사이트 메뉴와 데이터 관리 방식을 간단히 설명합니다.</div>
+    </div>
+  </div>
+
+  <div class="grid g3">
+    <div class="card">
+      <h3>실험 Data</h3>
+      <div class="subtitle">
+        상온 / 극저온 유형을 먼저 선택한 뒤 조건, SEM 8장, 측정값을 입력합니다.
+        저장된 실험 데이터는 같은 화면 아래에서 확인할 수 있습니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>실험 비교</h3>
+      <div class="subtitle">
+        상온은 Ar / C₄F₈ / O₂, 극저온은 Ar / SF₆ 기준으로 분리해 비교합니다.
+        실제로 달라지는 조건은 강조해서 확인할 수 있습니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Damage Data / 비교</h3>
+      <div class="subtitle">
+        DHF Before / After 값을 저장하고, Damage 비교에서 ΔTop CD, ΔDepth, ΔAngle을
+        상온 / 극저온 기준으로 모아볼 수 있습니다.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>과제 문서</h3>
+    <div class="note">
+      Low-k 과제 정보 메뉴에서 회의록 / 논문 / 학위논문 / 과제 계획서 / Excel을 한 화면에서 확인합니다.
+      문서의 이름과 태그, 첨부파일은 관리 메뉴에서 변경할 수 있습니다.
+    </div>
+  </div>
+
+  <div class="card help-changelog-card" style="margin-top:14px">
+    <div class="help-changelog-head">
+      <div>
+        <h2 style="margin:0;font-size:18px">Change Log</h2>
+        <div class="subtitle">사이트 수정 이력을 날짜와 설명으로 기록합니다.</div>
+      </div>
+      <button class="btn primary help-changelog-add admin-only-inline" onclick="openChangeLogEditor()">Change Log 추가</button>
+    </div>
+
+    <div class="help-changelog-rule"></div>
+    <div id="changeLogList" class="changelog-list help-changelog-list"></div>
+  </div>
+</section>
+
+
+</main>
+</div>
+
+<script>
+
+const SUPABASE_URL="https://tahbwnjrzjfegzigxsox.supabase.co";
+const SUPABASE_KEY="sb_publishable_8jyOe5F5lq0Z5yjW0SN1eA_doi51cvx";
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null;
+
+async function initAuth(){
+  try{
+    const {data}=await supabaseClient.auth.getSession();
+    currentUser=data.session?.user || null;
+    updateAuthUI();
+
+    supabaseClient.auth.onAuthStateChange((_event,session)=>{
+      currentUser=session?.user || null;
+      updateAuthUI();
+    });
+
+    await loadAllData();
+  }catch(err){
+    console.error("Initialization failed:",err);
+    currentUser=null;
+    updateAuthUI();
+    await loadAllData();
+  }
+}
+
+function updateAuthUI(){
+  const logged=!!currentUser;
+  const status=document.getElementById("authStatus");
+  const button=document.getElementById("authButton");
+
+  if(status){
+    status.textContent=logged
+      ? `관리자 · ${currentUser.email||""}`
+      : "공개 보기 모드";
+  }
+  if(button){
+    button.textContent=logged ? "로그아웃" : "관리자 로그인";
+  }
+
+  document.querySelectorAll(".admin-only,.admin-only-block,.admin-only-inline").forEach(el=>{
+    el.classList.toggle("is-hidden",!logged);
+  });
+
+  if(!logged){
+    const upload=document.getElementById("upload");
+    const damage=document.getElementById("damage");
+    if(upload?.classList.contains("active") || damage?.classList.contains("active")){
+      showView("dashboard");
+    }
+  }
+
+  renderExperimentData();
+  renderDamageArchive();
+  renderChangeLog();
+}
+
+async function handleAuthButton(){
+  if(currentUser){
+    await supabaseClient.auth.signOut();
+    return;
+  }
+
+  const email=prompt("관리자 이메일을 입력하세요.");
+  if(!email)return;
+
+  const password=prompt("비밀번호를 입력하세요.");
+  if(!password)return;
+
+  const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+
+  if(error){
+    alert("로그인 실패: "+error.message);
+    return;
+  }
+
+  currentUser=data.user;
+  updateAuthUI();
+}
+
+function requireAdmin(){
+  if(currentUser)return true;
+  alert("관리자 로그인 후 사용할 수 있습니다.");
+  return false;
+}
+
+const labels=["Side","Mask","Depth","Top CD","Middle CD","Bottom CD","Left Angle","Right Angle"];
+const imgKeys=["side","maskImg","depthImg","topImg","midImg","bottomImg","leftImg","rightImg"];
+
+let expData=[];
+let damageData=[];
+let changeLogData=[];
+let editingChangeLogId=null;
+let uploadMode="room";
+let compareMode="room";
+let archiveFilter="all";
+let imageBuffer={};
+let imageFiles={};
+let damageImages={};
+let damageFiles={};
+let calcManual=false;
+
+let editingExperimentDbId=null;
+let editingExperimentExpId=null;
+let existingExperimentImages={};
+
+let editingDamageDbId=null;
+let editingDamageId=null;
+let existingDamageImages={before:"",after:""};
+
+function val(id){return document.getElementById(id)?.value??""}
+function num(v){const n=parseFloat(v);return Number.isFinite(n)?n:null}
+function numberOrNull(v){if(v===null||v===undefined||String(v).trim()==="")return null;const n=Number(v);return Number.isFinite(n)?n:null}
+function nowStr(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
+function formatDbDate(value){if(!value)return "";const d=new Date(value),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
+function publicStoragePathFromUrl(url){if(!url||typeof url!=="string")return null;const marker="/storage/v1/object/public/sem-images/";if(!url.includes(marker))return null;return decodeURIComponent(url.split(marker)[1]);}
+function safeFileName(name){return String(name||"file").replace(/[^a-zA-Z0-9._-]+/g,"_")}
+
+function dbExperimentToUI(x){
+  const mode=x.experiment_mode||"room";
+  return {dbid:x.id,id:x.exp_id||("EXP-"+String(x.id).padStart(3,"0")),date:formatDbDate(x.created_at),mode,
+    source:x.source_power??"",bias:x.bias??"",ar:x.ar??"",gasMain:mode==="cryo"?(x.sf6??""):(x.c4f8??""),o2:mode==="room"?(x.o2??""):"",
+    pressure:x.pressure??"",time:x.time_sec??"",temp:x.temp_c??"",mask:x.mask_nm??"",depth:x.depth_nm??"",topcd:x.top_cd_nm??"",middlecd:x.middle_cd_nm??"",bottomcd:x.bottom_cd_nm??"",
+    leftangle:x.left_angle??"",rightangle:x.right_angle??"",calcangle:x.calc_angle??"",memo:x.memo??"",images:x.images||{}};
+}
+function dbDamageToUI(x){
+  return {dbid:x.id,id:x.damage_id||("DMG-"+String(x.id).padStart(3,"0")),date:formatDbDate(x.created_at),name:x.name||"Unnamed",mode:x.experiment_mode||"room",dhf:x.dhf_condition||"",
+    before:{top:x.before_top_cd,depth:x.before_depth,angle:x.before_angle,img:x.before_image||""},after:{top:x.after_top_cd,depth:x.after_depth,angle:x.after_angle,img:x.after_image||""},
+    deltaTop:x.delta_top_cd,deltaDepth:x.delta_depth,deltaAngle:x.delta_angle};
+}
+
+async function loadExperiments(){
+  const {data,error}=await supabaseClient.from("experiments").select("*").order("created_at",{ascending:false});
+  if(error){console.error(error);alert("Supabase의 기존 실험 데이터를 불러오지 못했습니다.\\n"+error.message);return;}
+  expData=(data||[]).map(dbExperimentToUI);renderDashboard();renderExperimentData();renderCompare();
+}
+async function loadDamageData(){
+  const {data,error}=await supabaseClient.from("damage_results").select("*").order("created_at",{ascending:false});
+  if(error){console.error("damage_results:",error);damageData=[];renderDamageArchive();renderDashboard();return;}
+  damageData=(data||[]).map(dbDamageToUI);renderDamageArchive();renderDashboard();
+}
+async function loadChangeLogs(){
+  const {data,error}=await supabaseClient.from("change_log").select("*").order("log_date",{ascending:false}).order("created_at",{ascending:false});
+  if(error){console.error("change_log:",error);changeLogData=[];renderChangeLog();return;}
+  changeLogData=(data||[]).map(x=>({id:String(x.id),dbid:x.id,date:x.log_date||"",description:x.description||""}));renderChangeLog();
+}
+async function loadAllData(){await Promise.all([loadExperiments(),loadDamageData(),loadChangeLogs(),loadProjectDocs()]);}
+
+async function uploadSemImage(file,folder,key){
+  const ext=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
+  const path=`${currentUser.id}/${folder}/${key}.${ext}`;
+  const {error}=await supabaseClient.storage.from("sem-images").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type||undefined});
+  if(error)throw error;
+  return supabaseClient.storage.from("sem-images").getPublicUrl(path).data.publicUrl;
+}
+
+function renderChangeLog(){
+  const list=document.getElementById("changeLogList");if(!list)return;
+  const rows=[...changeLogData].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  if(!rows.length){list.innerHTML='<div class="changelog-empty">아직 등록된 Change Log가 없습니다.</div>';return;}
+  list.innerHTML=rows.map(x=>`<div class="changelog-item"><div class="changelog-date">${escapeHtml(x.date||"-")}</div><div class="changelog-desc">${escapeHtml(x.description||"")}</div>${currentUser?`<div class="changelog-actions"><button class="changelog-btn" onclick="openChangeLogEditor('${x.id}')">수정</button><button class="changelog-btn delete" onclick="deleteChangeLog('${x.id}')">삭제</button></div>`:`<div></div>`}</div>`).join("");
+}
+function openChangeLogEditor(id=null){
+  if(!requireAdmin())return;editingChangeLogId=id;const modal=document.getElementById("changeLogModal"),title=document.getElementById("changeLogModalTitle"),date=document.getElementById("changeLogDate"),desc=document.getElementById("changeLogDescription");
+  if(id){const row=changeLogData.find(x=>String(x.id)===String(id));if(!row)return;title.textContent="Change Log 수정";date.value=row.date||"";desc.value=row.description||"";}
+  else{title.textContent="Change Log 추가";const d=new Date(),p=n=>String(n).padStart(2,"0");date.value=`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;desc.value="";}
+  modal.style.display="flex";setTimeout(()=>desc.focus(),30);
+}
+function closeChangeLogEditor(event){if(event&&event.target!==document.getElementById("changeLogModal"))return;document.getElementById("changeLogModal").style.display="none";editingChangeLogId=null;}
+async function saveChangeLog(){
+  if(!requireAdmin())return;const log_date=document.getElementById("changeLogDate").value,description=document.getElementById("changeLogDescription").value.trim();if(!log_date){alert("날짜를 입력하세요.");return;}if(!description){alert("설명을 입력하세요.");return;}
+  let error;if(editingChangeLogId)({error}=await supabaseClient.from("change_log").update({log_date,description}).eq("id",Number(editingChangeLogId)));else({error}=await supabaseClient.from("change_log").insert({log_date,description}));
+  if(error){alert("Change Log 저장 실패: "+error.message);return;}closeChangeLogEditor();await loadChangeLogs();
+}
+async function deleteChangeLog(id){if(!requireAdmin())return;const row=changeLogData.find(x=>String(x.id)===String(id));if(!row||!confirm(`${row.date} Change Log를 삭제할까요?`))return;const {error}=await supabaseClient.from("change_log").delete().eq("id",Number(id));if(error){alert("삭제 실패: "+error.message);return;}await loadChangeLogs();}
+
+function showView(id){
+  const target=document.getElementById(id);
+  if(!target){
+    console.warn("View not found:",id);
+    return;
+  }
+
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  target.classList.add("active");
+
+  document.querySelectorAll(".nav[data-view]").forEach(n=>{
+    n.classList.toggle("active",n.dataset.view===id);
+  });
+
+  if(id==="dashboard") renderDashboard();
+  if(id==="upload") renderExperimentData();
+  if(id==="compare") renderCompare();
+  if(id==="damage") renderDamageInput();
+  if(id==="damageArchive") renderDamageArchive();
+  if(id==="help") renderChangeLog();
+  if(id==="project"){
+    const firstDoc=document.querySelector("#docList .doc-card");
+    if(firstDoc) openManagedDoc("meeting",firstDoc);
+  }
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function setUploadMode(mode){
+  uploadMode=mode;
+  document.getElementById("upRoom").classList.toggle("active",mode==="room");
+  document.getElementById("upCryo").classList.toggle("active",mode==="cryo");
+  const label=document.getElementById("gasMainLabel");
+  const o2=document.getElementById("o2Field");
+  const temp=document.getElementById("temp");
+  if(mode==="room"){
+    label.textContent="C₄F₈ (sccm)";
+    o2.style.display="";
+    document.getElementById("gasMain").value="50";
+    document.getElementById("o2").value="10";
+    temp.value="20";
+    document.getElementById("modeNote").textContent="상온: Ar / C₄F₈ / O₂ 기반 profile 조건을 저장합니다.";
+  }else{
+    label.textContent="SF₆ (sccm)";
+    o2.style.display="none";
+    document.getElementById("gasMain").value="";
+    temp.value="-60";
+    document.getElementById("modeNote").textContent="극저온: 우선 Ar / SF₆ 기반 조건을 별도 저장합니다. 실제 recipe가 확정되면 gas field를 추가할 수 있습니다.";
+  }
+}
+
+function makeUploadGrid(){
+  const g=document.getElementById("uploadGrid");g.innerHTML="";
+  labels.forEach((lab,i)=>{
+    const key=imgKeys[i];
+    const existing=existingExperimentImages?.[key]||imageBuffer?.[key]||"";
+    const c=document.createElement("div");c.className="upload-card";
+    c.innerHTML=`<div style="font-size:10px;font-weight:850;margin-bottom:5px">${lab}</div><div class="thumb" id="thumb_${i}">${existing?`<img src="${existing}">`:lab}</div><input type="file" accept="image/*" onchange="previewImage(event,${i})">`;
+    g.appendChild(c);
+  });
+}
+function previewImage(e,i){
+  const f=e.target.files[0];if(!f)return;imageFiles[imgKeys[i]]=f;const r=new FileReader();r.onload=ev=>{imageBuffer[imgKeys[i]]=ev.target.result;document.getElementById("thumb_"+i).innerHTML=`<img src="${ev.target.result}">`};r.readAsDataURL(f);
+}
+
+function autoCalcAngle(){
+  if(calcManual)return;
+  const d=num(val("depth")),t=num(val("topcd")),b=num(val("bottomcd"));
+  if(d!==null&&t!==null&&b!==null&&d>0){
+    const delta=Math.abs(t-b)/2;
+    document.getElementById("calcangle").value=(90-Math.atan(delta/d)*180/Math.PI).toFixed(2);
+  }
+}
+
+async function saveExperiment(){
+  if(!requireAdmin())return;
+  try{
+    const isEditing=editingExperimentDbId!==null;
+    const folder=`experiment_${Date.now()}_${crypto.randomUUID().slice(0,8)}`;
+    const images=isEditing?{...existingExperimentImages}:{};
+    const replacedOldPaths=[];
+
+    for(const [key,file] of Object.entries(imageFiles)){
+      const oldUrl=images[key];
+      const newUrl=await uploadSemImage(file,folder,key);
+      images[key]=newUrl;
+      if(oldUrl){
+        const oldPath=publicStoragePathFromUrl(oldUrl);
+        if(oldPath)replacedOldPaths.push(oldPath);
+      }
+    }
+
+    const row={
+      experiment_mode:uploadMode,
+      source_power:numberOrNull(val("source")),
+      bias:val("bias")||null,
+      ar:numberOrNull(val("ar")),
+      c4f8:uploadMode==="room"?numberOrNull(val("gasMain")):null,
+      sf6:uploadMode==="cryo"?numberOrNull(val("gasMain")):null,
+      o2:uploadMode==="room"?numberOrNull(val("o2")):null,
+      pressure:numberOrNull(val("pressure")),
+      time_sec:numberOrNull(val("time")),
+      temp_c:numberOrNull(val("temp")),
+      mask_nm:numberOrNull(val("mask")),
+      depth_nm:numberOrNull(val("depth")),
+      top_cd_nm:numberOrNull(val("topcd")),
+      middle_cd_nm:numberOrNull(val("middlecd")),
+      bottom_cd_nm:numberOrNull(val("bottomcd")),
+      left_angle:numberOrNull(val("leftangle")),
+      right_angle:numberOrNull(val("rightangle")),
+      calc_angle:numberOrNull(val("calcangle")),
+      memo:val("memo")||null,
+      images
+    };
+
+    if(isEditing){
+      const {error}=await supabaseClient.from("experiments").update(row).eq("id",editingExperimentDbId);
+      if(error)throw error;
+
+      if(replacedOldPaths.length){
+        await supabaseClient.storage.from("sem-images").remove(replacedOldPaths);
+      }
+
+      const editedId=editingExperimentExpId;
+      resetUpload();
+      await loadExperiments();
+      alert(editedId+" 수정 완료");
+    }else{
+      const {data,error}=await supabaseClient.from("experiments").insert(row).select("id").single();
+      if(error)throw error;
+      const expId="EXP-"+String(data.id).padStart(3,"0");
+      await supabaseClient.from("experiments").update({exp_id:expId}).eq("id",data.id);
+      resetUpload();
+      await loadExperiments();
+      alert(expId+" 저장 완료");
+    }
+  }catch(err){
+    console.error(err);
+    alert((editingExperimentDbId!==null?"수정":"저장")+" 실패: "+(err?.message||err));
+  }
+}
+
+function resetUpload(){
+  ["mask","depth","topcd","middlecd","bottomcd","leftangle","rightangle","calcangle","memo"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value="";
+  });
+
+  imageBuffer={};
+  imageFiles={};
+  existingExperimentImages={};
+  calcManual=false;
+  editingExperimentDbId=null;
+  editingExperimentExpId=null;
+
+  const saveBtn=document.getElementById("expSaveBtn");
+  const resetBtn=document.getElementById("expResetBtn");
+  const notice=document.getElementById("expEditNotice");
+  if(saveBtn)saveBtn.textContent="저장하기";
+  if(resetBtn)resetBtn.textContent="초기화";
+  if(notice){
+    notice.style.display="none";
+    notice.textContent="";
+  }
+
+  makeUploadGrid();
+}
+
+function editExperiment(id){
+  if(!requireAdmin())return;
+  const row=expData.find(x=>x.id===id);
+  if(!row){
+    alert("수정할 실험 데이터를 찾지 못했습니다.");
+    return;
+  }
+
+  showView("upload");
+  setUploadMode(row.mode||"room");
+
+  editingExperimentDbId=row.dbid;
+  editingExperimentExpId=row.id;
+  existingExperimentImages={...(row.images||{})};
+  imageFiles={};
+  imageBuffer={...(row.images||{})};
+
+  const set=(id,value)=>{
+    const el=document.getElementById(id);
+    if(el)el.value=value??"";
+  };
+
+  set("source",row.source);
+  set("bias",row.bias);
+  set("ar",row.ar);
+  set("gasMain",row.gasMain);
+  set("o2",row.o2);
+  set("pressure",row.pressure);
+  set("time",row.time);
+  set("temp",row.temp);
+  set("mask",row.mask);
+  set("depth",row.depth);
+  set("topcd",row.topcd);
+  set("middlecd",row.middlecd);
+  set("bottomcd",row.bottomcd);
+  set("leftangle",row.leftangle);
+  set("rightangle",row.rightangle);
+  set("calcangle",row.calcangle);
+  set("memo",row.memo);
+
+  calcManual=row.calcangle!=="" && row.calcangle!==null && row.calcangle!==undefined;
+
+  makeUploadGrid();
+  imgKeys.forEach((key,i)=>{
+    const url=row.images?.[key];
+    if(url){
+      const thumb=document.getElementById("thumb_"+i);
+      if(thumb)thumb.innerHTML=`<img src="${url}">`;
+    }
+  });
+
+  const saveBtn=document.getElementById("expSaveBtn");
+  const resetBtn=document.getElementById("expResetBtn");
+  const notice=document.getElementById("expEditNotice");
+  if(saveBtn)saveBtn.textContent="수정 저장";
+  if(resetBtn)resetBtn.textContent="수정 취소";
+  if(notice){
+    notice.style.display="block";
+    notice.textContent=`${row.id} 수정 중 · 새 이미지를 선택하지 않은 항목은 기존 이미지가 유지됩니다.`;
+  }
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function setCompareMode(mode){
+  compareMode=mode;
+  const r=document.getElementById("cmpRoom"),c=document.getElementById("cmpCryo");
+  if(r){r.classList.toggle("active",mode==="room")}
+  if(c){c.classList.toggle("active",mode==="cryo")}
+  renderCompare();
+}
+
+function selectOptions(values){
+  return `<option value="">전체</option>`+[...new Set(values.filter(v=>v!==""&&v!=null))].map(v=>`<option>${v}</option>`).join("");
+}
+function renderCompareControls(rows){
+  const g=document.getElementById("compareControls");
+  if(compareMode==="room"){
+    g.innerHTML=`
+      <div class="field"><label>Source</label><select id="f_source">${selectOptions(rows.map(x=>x.source))}</select></div>
+      <div class="field"><label>Ar</label><select id="f_ar">${selectOptions(rows.map(x=>x.ar))}</select></div>
+      <div class="field"><label>C₄F₈</label><select id="f_gas">${selectOptions(rows.map(x=>x.gasMain))}</select></div>
+      <div class="field"><label>O₂</label><select id="f_o2">${selectOptions(rows.map(x=>x.o2))}</select></div>
+      <div class="field"><label>Pressure</label><select id="f_pressure">${selectOptions(rows.map(x=>x.pressure))}</select></div>
+      <div class="field"><label>Time</label><select id="f_time">${selectOptions(rows.map(x=>x.time))}</select></div>
+      <button class="btn primary" onclick="applyCompare()">적용</button>`;
+  }else{
+    g.innerHTML=`
+      <div class="field"><label>Source</label><select id="f_source">${selectOptions(rows.map(x=>x.source))}</select></div>
+      <div class="field"><label>Ar</label><select id="f_ar">${selectOptions(rows.map(x=>x.ar))}</select></div>
+      <div class="field"><label>SF₆</label><select id="f_gas">${selectOptions(rows.map(x=>x.gasMain))}</select></div>
+      <div class="field"><label>Pressure</label><select id="f_pressure">${selectOptions(rows.map(x=>x.pressure))}</select></div>
+      <div class="field"><label>Time</label><select id="f_time">${selectOptions(rows.map(x=>x.time))}</select></div>
+      <div class="field"><label>Temperature</label><select id="f_temp">${selectOptions(rows.map(x=>x.temp))}</select></div>
+      <button class="btn blue" onclick="applyCompare()">적용</button>`;
+  }
+}
+
+function renderCompare(){
+  document.getElementById("cmpRoom").classList.toggle("active",compareMode==="room");
+  document.getElementById("cmpCryo").classList.toggle("active",compareMode==="cryo");
+  const rows=expData.filter(x=>x.mode===compareMode);
+  renderCompareControls(rows);
+  drawCompare(rows,[]);
+}
+function applyCompare(){
+  const rows=expData.filter(x=>x.mode===compareMode);
+  const filters={
+    source:val("f_source"),ar:val("f_ar"),gasMain:val("f_gas"),pressure:val("f_pressure"),time:val("f_time")
+  };
+  if(compareMode==="room")filters.o2=val("f_o2");else filters.temp=val("f_temp");
+  const filtered=rows.filter(x=>Object.entries(filters).every(([k,v])=>!v||String(x[k])===String(v)));
+  drawCompare(filtered,Object.entries(filters).filter(([k,v])=>v).map(([k])=>k));
+}
+function toggleDetail(id){
+  document.getElementById(id)?.classList.toggle("open");
+}
+function drawCompare(rows){
+  const cards=document.getElementById("compareCards");
+  document.getElementById("compareSummary").textContent=`${compareMode==="room"?"상온":"극저온"} · ${rows.length}건`;
+  if(!rows.length){
+    cards.innerHTML=`<div class="empty">${compareMode==="cryo"?"아직 극저온 데이터가 없습니다. 실험 데이터에서 유형을 '극저온'으로 선택하고 Ar / SF₆ 조건을 저장하면 여기에 누적됩니다.":"조건에 맞는 데이터가 없습니다."}</div>`;
+    return;
+  }
+  const keys=compareMode==="room"?["source","bias","ar","gasMain","o2","pressure","time","temp"]:["source","bias","ar","gasMain","pressure","time","temp"];
+  const changed=new Set(keys.filter(k=>new Set(rows.map(x=>String(x[k]??""))).size>1));
+  const names={source:"Source",bias:"Bias",ar:"Ar",gasMain:compareMode==="room"?"C₄F₈":"SF₆",o2:"O₂",pressure:"Pressure",time:"Time",temp:"Temp."};
+  const units={source:"W",ar:"sccm",gasMain:"sccm",o2:"sccm",pressure:"mTorr",time:"sec",temp:"℃"};
+  cards.innerHTML=rows.map((x,idx)=>{
+    const detail=`det_${idx}`;
+    const conds=keys.map(k=>`<div class="cond-box ${changed.has(k)?"changed":""}"><div class="k">${names[k]}</div><div class="v">${x[k]||"-"}${x[k]&&units[k]?" "+units[k]:""}</div></div>`).join("");
+    const side=x.images?.side?`<img src="${x.images.side}">`:`<div class="placeholder-sem"></div>`;
+    const imgs=labels.map((l,i)=>{
+      const u=x.images?.[imgKeys[i]];
+      return `<div class="detail-item"><div class="detail-frame">${u?`<img src="${u}">`:`<div class="placeholder-sem"></div>`}</div><div class="detail-name">${l}</div></div>`;
+    }).join("");
+    const vals=[["Mask",x.mask,"nm"],["Depth",x.depth,"nm"],["Top CD",x.topcd,"nm"],["Middle CD",x.middlecd,"nm"],["Bottom CD",x.bottomcd,"nm"],["Left",x.leftangle,"°"],["Right",x.rightangle,"°"],["Calc.",x.calcangle,"°"]];
+    return `<div class="compare-card">
+      <div class="exp-head"><div class="exp-id">${x.id} · ${x.date}</div><div style="display:flex;align-items:center;gap:6px"><div class="mode-chip ${x.mode}">${x.mode==="room"?"상온":"극저온"}</div>${currentUser?`<button class="table-edit-btn" onclick="editExperiment('${x.id}')">수정</button><button class="table-delete-btn" onclick="deleteExperiment('${x.id}')">삭제</button>`:""}</div></div>
+      <div class="cond-mini">${conds}</div>
+      <div class="rep-wrap">
+        <div class="rep-head"><div><div class="rep-title">대표 사진: Side</div><div class="rep-hint">클릭하면 8개 전체 사진</div></div><button class="btn" style="padding:6px 9px;font-size:10px" onclick="toggleDetail('${detail}')">8개 보기</button></div>
+        <div class="rep-img" onclick="toggleDetail('${detail}')">${side}</div>
+        <div class="detail-panel" id="${detail}"><div class="detail-grid">${imgs}</div></div>
+      </div>
+      <div class="value-grid">${vals.map(([k,v,u])=>`<div class="value-box"><div class="k">${k}</div><div class="v">${v?`${v} ${u}`:"-"}</div></div>`).join("")}</div>
+    </div>`;
+  }).join("");
+}
+
+function damagePreview(e,id){
+  const f=e.target.files[0];if(!f)return;const key=id==="bPrev"?"before":"after";damageFiles[key]=f;const r=new FileReader();r.onload=ev=>{damageImages[key]=ev.target.result;document.getElementById(id).innerHTML=`<img src="${ev.target.result}">`};r.readAsDataURL(f);
+}
+
+function calcDamage(){
+  const bt=num(val("bTop")),at=num(val("aTop")),bd=num(val("bDepth")),ad=num(val("aDepth")),ba=num(val("bAngle")),aa=num(val("aAngle"));
+  const dt=bt!==null&&at!==null?Math.abs(at-bt):null;
+  const dd=bd!==null&&ad!==null?Math.abs(ad-bd):null;
+  const da=ba!==null&&aa!==null?Math.abs(aa-ba):null;
+  document.getElementById("rTop").textContent=dt!==null?dt.toFixed(2)+" nm":"-";
+  document.getElementById("rSide").textContent=dt!==null?(dt/2).toFixed(2)+" nm":"-";
+  document.getElementById("rDepth").textContent=dd!==null?dd.toFixed(2)+" nm":"-";
+  document.getElementById("rAngle").textContent=da!==null?da.toFixed(2)+"°":"-";
+}
+async function saveDamage(){
+  if(!requireAdmin())return;
+
+  const bt=num(val("bTop")),at=num(val("aTop")),
+        bd=num(val("bDepth")),ad=num(val("aDepth")),
+        ba=num(val("bAngle")),aa=num(val("aAngle"));
+
+  const dt=bt!==null&&at!==null?Math.abs(at-bt):null,
+        dd=bd!==null&&ad!==null?Math.abs(ad-bd):null,
+        da=ba!==null&&aa!==null?Math.abs(aa-ba):null;
+
+  try{
+    const isEditing=editingDamageDbId!==null;
+    const folder=`damage_${Date.now()}_${crypto.randomUUID().slice(0,8)}`;
+
+    let beforeImage=isEditing?(existingDamageImages.before||""):"";
+    let afterImage=isEditing?(existingDamageImages.after||""):"";
+    const replacedOldPaths=[];
+
+    if(damageFiles.before){
+      if(beforeImage){
+        const p=publicStoragePathFromUrl(beforeImage);
+        if(p)replacedOldPaths.push(p);
+      }
+      beforeImage=await uploadSemImage(damageFiles.before,folder,"before");
+    }
+
+    if(damageFiles.after){
+      if(afterImage){
+        const p=publicStoragePathFromUrl(afterImage);
+        if(p)replacedOldPaths.push(p);
+      }
+      afterImage=await uploadSemImage(damageFiles.after,folder,"after");
+    }
+
+    const row={
+      name:val("dmgName")||"Unnamed",
+      experiment_mode:val("dmgMode")||"room",
+      dhf_condition:val("dmgDHF")||null,
+      before_top_cd:bt,
+      before_depth:bd,
+      before_angle:ba,
+      before_image:beforeImage||null,
+      after_top_cd:at,
+      after_depth:ad,
+      after_angle:aa,
+      after_image:afterImage||null,
+      delta_top_cd:dt,
+      delta_depth:dd,
+      delta_angle:da
+    };
+
+    if(isEditing){
+      const {error}=await supabaseClient.from("damage_results").update(row).eq("id",editingDamageDbId);
+      if(error)throw error;
+
+      if(replacedOldPaths.length){
+        await supabaseClient.storage.from("sem-images").remove(replacedOldPaths);
+      }
+
+      const editedId=editingDamageId;
+      resetDamage();
+      await loadDamageData();
+      alert(editedId+" 수정 완료");
+    }else{
+      const {data,error}=await supabaseClient.from("damage_results").insert(row).select("id").single();
+      if(error)throw error;
+      const dmgId="DMG-"+String(data.id).padStart(3,"0");
+      await supabaseClient.from("damage_results").update({damage_id:dmgId}).eq("id",data.id);
+      resetDamage();
+      await loadDamageData();
+      alert(dmgId+" 저장 완료");
+    }
+  }catch(err){
+    console.error(err);
+    alert("Damage "+(editingDamageDbId!==null?"수정":"저장")+" 실패: "+(err?.message||err));
+  }
+}
+
+function resetDamage(){
+  ["dmgName","bTop","bDepth","bAngle","aTop","aDepth","aAngle"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value="";
+  });
+
+  const dhf=document.getElementById("dmgDHF");
+  const mode=document.getElementById("dmgMode");
+  if(dhf)dhf.value="0.5% HF / 60 sec";
+  if(mode)mode.value="room";
+
+  damageImages={};
+  damageFiles={};
+  existingDamageImages={before:"",after:""};
+  editingDamageDbId=null;
+  editingDamageId=null;
+
+  const bPrev=document.getElementById("bPrev");
+  const aPrev=document.getElementById("aPrev");
+  if(bPrev)bPrev.innerHTML="Before DHF";
+  if(aPrev)aPrev.innerHTML="After DHF";
+
+  const bImg=document.getElementById("bImg");
+  const aImg=document.getElementById("aImg");
+  if(bImg)bImg.value="";
+  if(aImg)aImg.value="";
+
+  ["rTop","rSide","rDepth","rAngle"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.textContent="-";
+  });
+
+  const saveBtn=document.getElementById("damageSaveBtn");
+  const resetBtn=document.getElementById("damageResetBtn");
+  const notice=document.getElementById("damageEditNotice");
+  if(saveBtn)saveBtn.textContent="Damage 저장";
+  if(resetBtn)resetBtn.textContent="초기화";
+  if(notice){
+    notice.style.display="none";
+    notice.textContent="";
+  }
+}
+
+function editDamage(id){
+  if(!requireAdmin())return;
+  const row=damageData.find(x=>x.id===id);
+  if(!row){
+    alert("수정할 Damage 데이터를 찾지 못했습니다.");
+    return;
+  }
+
+  showView("damage");
+
+  editingDamageDbId=row.dbid;
+  editingDamageId=row.id;
+  existingDamageImages={
+    before:row.before?.img||"",
+    after:row.after?.img||""
+  };
+  damageImages={...existingDamageImages};
+  damageFiles={};
+
+  const set=(id,value)=>{
+    const el=document.getElementById(id);
+    if(el)el.value=value??"";
+  };
+
+  set("dmgName",row.name);
+  set("dmgMode",row.mode);
+  set("dmgDHF",row.dhf);
+  set("bTop",row.before?.top);
+  set("bDepth",row.before?.depth);
+  set("bAngle",row.before?.angle);
+  set("aTop",row.after?.top);
+  set("aDepth",row.after?.depth);
+  set("aAngle",row.after?.angle);
+
+  const bPrev=document.getElementById("bPrev");
+  const aPrev=document.getElementById("aPrev");
+  if(bPrev)bPrev.innerHTML=row.before?.img?`<img src="${row.before.img}">`:"Before DHF";
+  if(aPrev)aPrev.innerHTML=row.after?.img?`<img src="${row.after.img}">`:"After DHF";
+
+  calcDamage();
+
+  const saveBtn=document.getElementById("damageSaveBtn");
+  const resetBtn=document.getElementById("damageResetBtn");
+  const notice=document.getElementById("damageEditNotice");
+  if(saveBtn)saveBtn.textContent="Damage 수정 저장";
+  if(resetBtn)resetBtn.textContent="수정 취소";
+  if(notice){
+    notice.style.display="block";
+    notice.textContent=`${row.id} 수정 중 · 새 SEM을 선택하지 않으면 기존 이미지가 유지됩니다.`;
+  }
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function setArchiveFilter(f){
+  archiveFilter=f;
+  renderDamageArchive();
+}
+
+function renderDamageArchive(){
+  const allBtn=document.getElementById("arcAll");
+  const roomBtn=document.getElementById("arcRoom");
+  const cryoBtn=document.getElementById("arcCryo");
+  if(allBtn)allBtn.classList.toggle("active",archiveFilter==="all");
+  if(roomBtn)roomBtn.classList.toggle("active",archiveFilter==="room");
+  if(cryoBtn)cryoBtn.classList.toggle("active",archiveFilter==="cryo");
+
+  const q=(document.getElementById("arcSearch")?.value||"").trim().toLowerCase();
+  const sort=document.getElementById("arcSort")?.value||"new";
+
+  let rows=damageData.filter(x=>{
+    const modeOk=archiveFilter==="all"||x.mode===archiveFilter;
+    const hay=[x.id,x.name,x.dhf,x.mode].join(" ").toLowerCase();
+    const searchOk=!q||hay.includes(q);
+    return modeOk&&searchOk;
+  });
+
+  rows=[...rows];
+  if(sort==="topAsc")rows.sort((a,b)=>(a.deltaTop??999999)-(b.deltaTop??999999));
+  if(sort==="topDesc")rows.sort((a,b)=>(b.deltaTop??-1)-(a.deltaTop??-1));
+
+  const avg=key=>{
+    const vals=rows.map(x=>x[key]).filter(v=>v!==null&&v!==undefined&&Number.isFinite(Number(v))).map(Number);
+    return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2) : "-";
+  };
+
+  const countEl=document.getElementById("arcCount");
+  const topEl=document.getElementById("arcAvgTop");
+  const depthEl=document.getElementById("arcAvgDepth");
+  const angleEl=document.getElementById("arcAvgAngle");
+  if(countEl)countEl.textContent=rows.length;
+  if(topEl)topEl.textContent=avg("deltaTop");
+  if(depthEl)depthEl.textContent=avg("deltaDepth");
+  if(angleEl)angleEl.textContent=avg("deltaAngle");
+
+  const list=document.getElementById("damageArchiveList");
+  if(!list)return;
+
+  if(!rows.length){
+    list.innerHTML='<div class="empty">조건에 맞는 Damage 데이터가 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML=rows.map(x=>`
+    <div class="damage-card">
+      <div class="damage-card-top">
+        <div>
+          <b>${escapeHtml(x.name||x.id)}</b>
+          <div class="subtitle">${x.id} · ${x.date} · ${escapeHtml(x.dhf||"-")}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mode-chip ${x.mode}">${x.mode==="room"?"상온":"극저온"}</div>
+          ${currentUser?`<button class="table-edit-btn" onclick="editDamage('${x.id}')">수정</button><button class="table-delete-btn" onclick="deleteDamage('${x.id}')">삭제</button>`:""}
+        </div>
+      </div>
+
+      <div class="damage-kpis">
+        <div class="damage-kpi"><div class="k">Before Top CD</div><div class="v">${x.before?.top??"-"}</div></div>
+        <div class="damage-kpi"><div class="k">After Top CD</div><div class="v">${x.after?.top??"-"}</div></div>
+        <div class="damage-kpi"><div class="k">Δ Top CD</div><div class="v">${x.deltaTop!=null?Number(x.deltaTop).toFixed(2)+" nm":"-"}</div></div>
+        <div class="damage-kpi"><div class="k">Per-side est.</div><div class="v">${x.deltaTop!=null?(Number(x.deltaTop)/2).toFixed(2)+" nm":"-"}</div></div>
+        <div class="damage-kpi"><div class="k">Before Depth</div><div class="v">${x.before?.depth??"-"}</div></div>
+        <div class="damage-kpi"><div class="k">After Depth</div><div class="v">${x.after?.depth??"-"}</div></div>
+        <div class="damage-kpi"><div class="k">Δ Depth</div><div class="v">${x.deltaDepth!=null?Number(x.deltaDepth).toFixed(2)+" nm":"-"}</div></div>
+        <div class="damage-kpi"><div class="k">Δ Angle</div><div class="v">${x.deltaAngle!=null?Number(x.deltaAngle).toFixed(2)+"°":"-"}</div></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function deleteDamage(id){
+  if(!requireAdmin())return;
+  const row=damageData.find(x=>x.id===id);
+  if(!row||!confirm(`${id} Damage 데이터를 삭제할까요?`))return;
+  const paths=[row.before?.img,row.after?.img].map(publicStoragePathFromUrl).filter(Boolean);
+  const {error}=await supabaseClient.from("damage_results").delete().eq("id",row.dbid);
+  if(error){alert("삭제 실패: "+error.message);return;}
+  if(paths.length)await supabaseClient.storage.from("sem-images").remove(paths);
+  if(editingDamageDbId===row.dbid)resetDamage();
+  await loadDamageData();
+}
+
+function renderDamageInput(){
+  // Damage Data는 입력 전용 페이지.
+  // 저장 결과 비교는 Damage 비교 페이지에서 수행합니다.
+}
+
+function renderExperimentData(){
+  const target=document.getElementById("experimentDataTable");
+  if(!target)return;
+
+  const mode=document.getElementById("expDataMode")?.value || "";
+  const q=(document.getElementById("expDataSearch")?.value || "").trim().toLowerCase();
+
+  const rows=expData.filter(x=>{
+    const modeOk=!mode || x.mode===mode;
+    const hay=[x.id,x.memo,x.source,x.ar,x.gasMain,x.o2,x.pressure,x.temp].join(" ").toLowerCase();
+    return modeOk && (!q || hay.includes(q));
+  });
+
+  if(!rows.length){
+    target.innerHTML='<div class="empty">저장된 실험 데이터가 없습니다.</div>';
+    return;
+  }
+
+  const body=rows.map(x=>`
+    <tr>
+      <td>${x.id}</td>
+      <td><span class="mode-chip ${x.mode}">${x.mode==="room"?"상온":"극저온"}</span></td>
+      <td>${x.source||"-"} W</td>
+      <td>${x.bias||"-"}</td>
+      <td>${x.ar||"-"}</td>
+      <td>${x.mode==="room"
+        ? `C₄F₈ ${x.gasMain||"-"} / O₂ ${x.o2||"-"}`
+        : `SF₆ ${x.gasMain||"-"}`}</td>
+      <td>${x.pressure||"-"}</td>
+      <td>${x.temp||"-"}</td>
+      <td>${x.depth||"-"}</td>
+      <td>${x.topcd||"-"}</td>
+      <td>${x.middlecd||"-"}</td>
+      <td>${x.bottomcd||"-"}</td>
+      <td>${x.calcangle||"-"}</td>
+      <td>${x.memo||"-"}</td>
+      ${currentUser ? `<td><div class="table-actions"><button class="table-edit-btn" onclick="editExperiment('${x.id}')">수정</button><button class="table-delete-btn" onclick="deleteExperiment('${x.id}')">삭제</button></div></td>` : `<td></td>`}
+    </tr>
+  `).join("");
+
+  target.innerHTML=`<div class="scroll"><table>
+    <tr>
+      <th>ID</th><th>유형</th><th>Source</th><th>Bias</th><th>Ar</th><th>Gas</th>
+      <th>Pressure</th><th>Temp.</th><th>Depth</th><th>Top CD</th><th>Middle CD</th>
+      <th>Bottom CD</th><th>Calc. Angle</th><th>메모</th><th></th>
+    </tr>${body}
+  </table></div>`;
+}
+
+async function deleteExperiment(id){
+  if(!requireAdmin())return;
+  const row=expData.find(x=>x.id===id);
+  if(!row||!confirm(`${id} 데이터를 삭제할까요?`))return;
+  const paths=Object.values(row.images||{}).map(publicStoragePathFromUrl).filter(Boolean);
+  const {error}=await supabaseClient.from("experiments").delete().eq("id",row.dbid);
+  if(error){alert("삭제 실패: "+error.message);return;}
+  if(paths.length)await supabaseClient.storage.from("sem-images").remove(paths);
+  if(editingExperimentDbId===row.dbid)resetUpload();
+  await loadExperiments();
+}
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify({experiments:expData,damage:damageData},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="lowk_lab_backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+function renderDashboard(){
+  document.getElementById("dashRoom").textContent=expData.filter(x=>x.mode==="room").length;
+  document.getElementById("dashCryo").textContent=expData.filter(x=>x.mode==="cryo").length;
+  document.getElementById("dashDamage").textContent=damageData.length;
+}
+
+
+
+
+const managedDocs={
+  meeting:{doc_key:"meeting",title:"Low-k 회의 정리 (26.06.30)",tag:"MEETING NOTE",storage_path:null,file_name:null,size_bytes:null,kind:"builtin"},
+  paper:{doc_key:"paper",title:"Tak et al., Materials Express (2020)",tag:"REFERENCE",storage_path:null,file_name:null,size_bytes:null,kind:"builtin"},
+  thesis:{doc_key:"thesis",title:"장준기 선배님 학위논문",tag:"THESIS",storage_path:null,file_name:null,size_bytes:null,kind:"slot"},
+  plan:{doc_key:"plan",title:"과제 계획서",tag:"PROJECT",storage_path:null,file_name:null,size_bytes:null,kind:"slot"},
+  excel:{doc_key:"excel",title:"과제 정보 Excel",tag:"DATA",storage_path:null,file_name:null,size_bytes:null,kind:"slot"}
+};
+let managedCurrentKey=null;let currentExcelBook=null;
+function getManagedCard(key){return document.querySelector(`.doc-card[data-slot="${key}"]`)}
+function refreshManagedCard(key){const doc=managedDocs[key],card=getManagedCard(key);if(!doc||!card)return;card.querySelector(".doc-title").textContent=doc.title;card.querySelector(".doc-type").textContent=doc.tag;const meta=card.querySelector(".doc-meta");if(meta)meta.textContent=doc.storage_path?`${doc.file_name||"파일"}${doc.size_bytes?` · ${(doc.size_bytes/1024).toFixed(1)} KB`:""}`:(doc.kind==="builtin"?"파일 연결 가능":"업로드 예정");card.classList.toggle("has-file",!!doc.storage_path);}
+async function loadProjectDocs(){const {data,error}=await supabaseClient.from("project_documents").select("*").order("created_at",{ascending:true});if(error){console.error("project_documents:",error);return;}document.querySelectorAll('.doc-card[data-dynamic="1"]').forEach(x=>x.remove());for(const x of (data||[])){const key=x.doc_key,base=managedDocs[key]||{doc_key:key,kind:"dynamic"};managedDocs[key]={...base,dbid:x.id,title:x.title||base.title||"문서",tag:x.tag||base.tag||"DOCUMENT",storage_path:x.storage_path||null,file_name:x.file_name||null,mime_type:x.mime_type||null,size_bytes:x.size_bytes||null};if(getManagedCard(key))refreshManagedCard(key);else addDynamicDocCard(key);}updateAuthUI();}
+function addDynamicDocCard(key){const doc=managedDocs[key];if(!doc)return;const card=document.createElement("div");card.className="doc-card"+(doc.storage_path?" has-file":"");card.dataset.slot=key;card.dataset.dynamic="1";card.onclick=()=>openManagedDoc(key,card);card.innerHTML=`<div class="doc-card-main"><div class="doc-type">${escapeHtml(doc.tag||"DOCUMENT")}</div><div class="doc-title">${escapeHtml(doc.title||"문서")}</div><div class="doc-meta">${doc.storage_path?escapeHtml(doc.file_name||"파일"):"업로드 예정"}</div></div><button class="doc-manage-btn admin-only-inline" onclick="event.stopPropagation();openManagedDocModal('${key}')">관리</button>`;document.getElementById("docList").appendChild(card);}
+function showBuiltInSummary(key,doc){const body=document.getElementById("viewerBody");document.getElementById("viewerTitle").textContent=doc.title;document.getElementById("viewerActions").innerHTML="";currentExcelBook=null;if(key==="meeting"){body.innerHTML=`<h3>핵심 실행 항목</h3><div class="info-list"><div class="info-row"><div class="info-no">1</div><div class="info-text"><b>Reference SEM</b><p>Pattern 위치/절단 방법 확인 → pristine cross-section reference 확보.</p></div></div><div class="info-row"><div class="info-no">2</div><div class="info-text"><b>SF₆ Cryogenic setup</b><p>여러 조건 split 후 vertical profile 조건을 우선 선정.</p></div></div><div class="info-row"><div class="info-no">3</div><div class="info-text"><b>상온 CW Reference</b><p>현재 wafer/장비 기준으로 상온 baseline을 새로 확보.</p></div></div><div class="info-row"><div class="info-no">4</div><div class="info-text"><b>DHF PID</b><p>유망 조건만 DHF 후 Before / After Top CD, Depth, Angle 비교.</p></div></div></div>`;return;}if(key==="paper"){body.innerHTML=`<h3>Etch characteristics of nanoscale ultra low-k dielectric using C₃H₂F₆</h3><div class="reference paper-ref">• FE-SEM으로 opening dimension / sidewall angle 측정<br>• 0.5% diluted HF에 60 s dipping 후 profile 변화 비교<br>• optimized C₄F₈: opening change ≈ 18 nm, angle change ≈ 2.3°<br>• optimized C₃H₂F₆: opening change ≈ 8 nm, angle change ≈ 1.6°</div>`;return;}body.innerHTML=`<div class="empty" style="margin-top:180px"><b>${escapeHtml(doc.title)}</b><br><br>${currentUser?"관리 버튼에서 파일을 연결하세요.":"관리자 로그인 후 문서를 열람할 수 있습니다."}</div>`;}
+async function openManagedDoc(key,card){const doc=managedDocs[key];if(!doc)return;clearDocActive(card);if(!doc.storage_path){showBuiltInSummary(key,doc);return;}if(!currentUser){if(key==="meeting"||key==="paper")showBuiltInSummary(key,doc);else{document.getElementById("viewerTitle").textContent=doc.title;document.getElementById("viewerBody").innerHTML='<div class="empty" style="margin-top:180px">관리자 로그인 후 문서를 열람할 수 있습니다.</div>';}return;}await previewStoredDocument(doc,card);}
+function openManagedDocModal(key){if(!requireAdmin())return;const doc=managedDocs[key];if(!doc)return;managedCurrentKey=key;document.getElementById("manageDocTitle").value=doc.title;document.getElementById("manageDocTag").value=doc.tag||"DOCUMENT";document.getElementById("manageFileName").textContent=doc.storage_path?(doc.file_name||"연결된 파일"):"연결된 파일 없음";document.getElementById("manageDownloadBtn").disabled=!doc.storage_path;document.getElementById("manageDeleteBtn").disabled=!doc.storage_path;document.getElementById("docManageModal").style.display="flex";}
+function closeManagedDocModal(event){if(event&&event.target!==document.getElementById("docManageModal"))return;document.getElementById("docManageModal").style.display="none";managedCurrentKey=null;}
+async function saveManagedDocMeta(){if(!requireAdmin()||!managedCurrentKey)return;const title=document.getElementById("manageDocTitle").value.trim(),tag=document.getElementById("manageDocTag").value.trim()||"DOCUMENT";if(!title){alert("문서 이름을 입력하세요.");return;}const {error}=await supabaseClient.from("project_documents").update({title,tag,updated_at:new Date().toISOString()}).eq("doc_key",managedCurrentKey);if(error){alert("문서 정보 저장 실패: "+error.message);return;}closeManagedDocModal();await loadProjectDocs();}
+function chooseManagedFile(){if(!requireAdmin()||!managedCurrentKey)return;const key=managedCurrentKey;pickFile(async file=>{try{const doc=managedDocs[key],path=`${currentUser.id}/${key}/${Date.now()}_${safeFileName(file.name)}`;const {error:upErr}=await supabaseClient.storage.from("project-docs").upload(path,file,{upsert:false,contentType:file.type||undefined});if(upErr)throw upErr;const {error:dbErr}=await supabaseClient.from("project_documents").update({storage_path:path,file_name:file.name,mime_type:file.type||null,size_bytes:file.size,updated_at:new Date().toISOString()}).eq("doc_key",key);if(dbErr)throw dbErr;if(doc?.storage_path)await supabaseClient.storage.from("project-docs").remove([doc.storage_path]);await loadProjectDocs();managedCurrentKey=key;openManagedDocModal(key);const card=getManagedCard(key);if(card)await openManagedDoc(key,card);}catch(err){console.error(err);alert("파일 업로드 실패: "+(err?.message||err));}});}
+async function downloadManagedCurrent(){if(!managedCurrentKey)return;const doc=managedDocs[managedCurrentKey];if(!doc?.storage_path)return;const {data,error}=await supabaseClient.storage.from("project-docs").download(doc.storage_path);if(error){alert("다운로드 실패: "+error.message);return;}const url=URL.createObjectURL(data),a=document.createElement("a");a.href=url;a.download=doc.file_name||doc.title;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+async function deleteManagedCurrent(){if(!requireAdmin()||!managedCurrentKey)return;const key=managedCurrentKey,doc=managedDocs[key];if(!doc?.storage_path||!confirm(`${doc.file_name||doc.title} 파일을 삭제할까요?`))return;const {error:rmErr}=await supabaseClient.storage.from("project-docs").remove([doc.storage_path]);if(rmErr){alert("파일 삭제 실패: "+rmErr.message);return;}const {error}=await supabaseClient.from("project_documents").update({storage_path:null,file_name:null,mime_type:null,size_bytes:null,updated_at:new Date().toISOString()}).eq("doc_key",key);if(error){alert("문서 정보 수정 실패: "+error.message);return;}await loadProjectDocs();managedCurrentKey=key;openManagedDocModal(key);const card=getManagedCard(key);if(card)openManagedDoc(key,card);}
+async function addLocalDoc(e){if(!requireAdmin())return;const file=e.target.files[0];if(!file)return;const key=`doc_${Date.now()}_${crypto.randomUUID().slice(0,6)}`;try{const path=`${currentUser.id}/${key}/${Date.now()}_${safeFileName(file.name)}`;const {error:upErr}=await supabaseClient.storage.from("project-docs").upload(path,file,{upsert:false,contentType:file.type||undefined});if(upErr)throw upErr;const {error}=await supabaseClient.from("project_documents").insert({doc_key:key,title:file.name.replace(/\.[^.]+$/,"")||file.name,tag:"DOCUMENT",storage_path:path,file_name:file.name,mime_type:file.type||null,size_bytes:file.size});if(error)throw error;await loadProjectDocs();const card=getManagedCard(key);if(card)openManagedDoc(key,card);}catch(err){console.error(err);alert("문서 추가 실패: "+(err?.message||err));}finally{e.target.value="";}}
+async function previewStoredDocument(doc,card){clearDocActive(card);document.getElementById("viewerTitle").textContent=doc.title;document.getElementById("viewerActions").innerHTML="";currentExcelBook=null;const ext=(doc.file_name?.split(".").pop()||"").toLowerCase();if(["xlsx","xls","csv","txt"].includes(ext)){const {data,error}=await supabaseClient.storage.from("project-docs").download(doc.storage_path);if(error){document.getElementById("viewerBody").innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`;return;}if(["xlsx","xls"].includes(ext)){currentExcelBook=XLSX.read(await data.arrayBuffer(),{type:"array"});renderExcelSheet(0);return;}document.getElementById("viewerBody").innerHTML=`<pre>${escapeHtml(await data.text())}</pre>`;return;}const {data,error}=await supabaseClient.storage.from("project-docs").createSignedUrl(doc.storage_path,3600);if(error){document.getElementById("viewerBody").innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`;return;}if(ext==="pdf")document.getElementById("viewerBody").innerHTML=`<iframe src="${data.signedUrl}"></iframe>`;else if(["png","jpg","jpeg","webp"].includes(ext))document.getElementById("viewerBody").innerHTML=`<img src="${data.signedUrl}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto">`;else document.getElementById("viewerBody").innerHTML='<div class="empty">미리보기를 지원하지 않는 파일입니다. 관리 메뉴에서 다운로드하세요.</div>';}
+
+function clearDocActive(el){
+  document.querySelectorAll(".doc-card").forEach(x=>x.classList.remove("active"));
+  if(el)el.classList.add("active");
+}
+
+function renderExcelSheet(index){
+  if(!currentExcelBook)return;
+  const names=currentExcelBook.SheetNames;
+  if(!names.length)return;
+  const safe=Math.max(0,Math.min(index,names.length-1));
+  const tabs=names.map((n,i)=>
+    `<button class="excel-tab ${i===safe?"active":""}" onclick="renderExcelSheet(${i})">${escapeHtml(n)}</button>`
+  ).join("");
+  const ws=currentExcelBook.Sheets[names[safe]];
+  const table=XLSX.utils.sheet_to_html(ws);
+  document.getElementById("viewerBody").innerHTML=
+    `<div class="excel-viewer"><div class="excel-sheet-tabs">${tabs}</div><div class="excel-sheet-body">${table}</div></div>`;
+}
+
+function pickFile(callback){
+  const input=document.createElement("input");
+  input.type="file";
+  input.accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv,.txt";
+  input.style.display="none";
+  input.onchange=e=>{
+    const file=e.target.files[0];
+    if(file)callback(file);
+    input.remove();
+  };
+  document.body.appendChild(input);
+  input.click();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+makeUploadGrid();
+setUploadMode("room");
+renderDashboard();
+renderExperimentData();
+renderChangeLog();
+renderDamageArchive();
+openManagedDoc("meeting",document.querySelector("#docList .doc-card"));
+initAuth();
+</script>
+
+
+<div id="docManageModal" class="doc-meta-modal" style="display:none" onclick="closeManagedDocModal(event)">
+  <div class="doc-meta-dialog doc-manage-dialog" onclick="event.stopPropagation()">
+    <div class="doc-meta-dialog-head">
+      <div>
+        <div class="doc-meta-dialog-title">문서 관리</div>
+        <div class="doc-meta-dialog-sub">문서 정보와 첨부파일을 한 곳에서 관리합니다.</div>
+      </div>
+      <button class="doc-meta-close" onclick="closeManagedDocModal()">×</button>
+    </div>
+
+    <div class="doc-meta-form">
+      <label>
+        <span>문서 이름</span>
+        <input id="manageDocTitle" type="text">
+      </label>
+      <label>
+        <span>태그</span>
+        <input id="manageDocTag" type="text" placeholder="예: MEETING NOTE / REFERENCE / THESIS">
+      </label>
+    </div>
+
+    <div class="manage-file-box">
+      <div>
+        <div class="manage-file-label">첨부파일</div>
+        <div id="manageFileName" class="manage-file-name">연결된 파일 없음</div>
+      </div>
+      <button class="viewer-action-btn" onclick="chooseManagedFile()">파일 선택 / 교체</button>
+    </div>
+
+    <div class="manage-action-row">
+      <button id="manageDownloadBtn" class="viewer-action-btn" onclick="downloadManagedCurrent()">다운로드</button>
+      <button id="manageDeleteBtn" class="viewer-action-btn manage-delete" onclick="deleteManagedCurrent()">파일 삭제</button>
+    </div>
+
+    <div class="doc-meta-dialog-actions">
+      <button class="btn" onclick="closeManagedDocModal()">취소</button>
+      <button class="btn primary" onclick="saveManagedDocMeta()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="changeLogModal" class="doc-meta-modal" style="display:none" onclick="closeChangeLogEditor(event)">
+  <div class="doc-meta-dialog changelog-dialog" onclick="event.stopPropagation()">
+    <div class="doc-meta-dialog-head">
+      <div>
+        <div class="doc-meta-dialog-title" id="changeLogModalTitle">Change Log 추가</div>
+        <div class="doc-meta-dialog-sub">날짜와 수정 내용을 입력합니다.</div>
+      </div>
+      <button class="doc-meta-close" onclick="closeChangeLogEditor()">×</button>
+    </div>
+
+    <div class="doc-meta-form">
+      <label>
+        <span>날짜</span>
+        <input id="changeLogDate" type="date">
+      </label>
+      <label>
+        <span>설명</span>
+        <textarea id="changeLogDescription" rows="5" placeholder="예: Damage 비교 페이지 추가"></textarea>
+      </label>
+    </div>
+
+    <div class="doc-meta-dialog-actions">
+      <button class="btn" onclick="closeChangeLogEditor()">취소</button>
+      <button class="btn primary" onclick="saveChangeLog()">저장</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
